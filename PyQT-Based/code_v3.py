@@ -2,6 +2,11 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import QRegExp
 from netmiko import ConnectHandler
 
+class Backend_Process(QtCore.QThread):
+    countChanged = QtCore.pyqtSignal(str)
+    def run(self):
+        self.countChanged.emit("Hello World")
+
 class Ui_MainWindow(QtWidgets.QWidget):
     # Local Variables
     models = ['cisco_ios','cisco_asa','fortinet']
@@ -19,9 +24,10 @@ class Ui_MainWindow(QtWidgets.QWidget):
             print("Please enter all details")
         else:
             print("Hooray, you got through")
+            self.show_popup()
     def go_console_button_clicked(self):
         print("This feature not yet implemented...")
-    def add_row(self):
+    def add_row_button_clicked(self):
         rowPosition = self.manual_device_table.rowCount()
         self.manual_device_table.insertRow(rowPosition)
         model_combo = QtWidgets.QComboBox()
@@ -33,7 +39,7 @@ class Ui_MainWindow(QtWidgets.QWidget):
             purpose_combo.addItem(t)
         self.manual_device_table.setCellWidget(rowPosition, 4, purpose_combo)
         self.manual_device_table.horizontalHeader().setSectionResizeMode(4, QtWidgets.QHeaderView.ResizeToContents)
-    def delete_row(self):
+    def delete_row_button_clicked(self):
         indices = self.manual_device_table.selectionModel().selectedRows()
         for index in sorted(indices):
             self.manual_device_table.removeRow(index.row())
@@ -46,6 +52,22 @@ class Ui_MainWindow(QtWidgets.QWidget):
         self.get_file_button.setText(self.selected_file)
     def go_file_button_clicked(self):
         print("Go File Button Clicked!")
+
+    # Pop-up window
+    def show_popup(self):
+        msg = QtWidgets.QMessageBox()
+        msg.setWindowTitle("Status")
+        msg.setText("Information Gathering in progress...")
+        msg.setIcon(QtWidgets.QMessageBox.Question)
+        msg.setStandardButtons(QtWidgets.QMessageBox.Abort)
+        msg.setDetailedText("Detail 01")
+        self.calc = Backend_Process()
+        self.calc.countChanged.connect(self.popup_message)
+        self.calc.start()
+        msg.show()
+        sys.exit(msg.exec_())
+    def popup_message(self, value):
+        print(value)
 
     # Qt Designer Generated
     def setupUi(self, MainWindow):
@@ -319,14 +341,14 @@ class Ui_MainWindow(QtWidgets.QWidget):
             model_combo = QtWidgets.QComboBox()
             for t in self.models:
                 model_combo.addItem(t)
-            self.manual_device_table.setCellWidget(index,3,model_combo)
+            self.manual_device_table.setCellWidget(index, 3, model_combo)
             purpose_combo = QtWidgets.QComboBox()
             for t in self.purpose:
                 purpose_combo.addItem(t)
             self.manual_device_table.setCellWidget(index, 4, purpose_combo)
             self.manual_device_table.horizontalHeader().setSectionResizeMode(4, QtWidgets.QHeaderView.ResizeToContents)
-        self.add_row_button.clicked.connect(self.add_row)
-        self.delete_row_button.clicked.connect(self.delete_row)
+        self.add_row_button.clicked.connect(self.add_row_button_clicked)
+        self.delete_row_button.clicked.connect(self.delete_row_button_clicked)
         self.go_manual_button.clicked.connect(self.go_manual_button_clicked)
 
         # Multiple Devices / Import Devices from a File
