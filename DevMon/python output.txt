@@ -1,0 +1,132 @@
+sajitht@ubuntu:~/Desktop/DevMon$ python devmon.py
+------------------------------------------
+
+DevMon V 1.1 - Cisco Router/Switch details
+
+------------------------------------------
+
+
+(u'Device hostname CORE-SW01 | IP : ', '192.168.134.160')
+
+
+----------------Device Time---------------------------
+
+*17:56:36.764 UTC Sat Apr 18 2020
+
+
+----------------Interface Details---------------------
+
+Interface              IP-Address      OK? Method Status                Protocol
+GigabitEthernet0/0     unassigned      YES unset  up                    up
+GigabitEthernet0/1     unassigned      YES unset  up                    up
+GigabitEthernet0/2     unassigned      YES unset  up                    up
+GigabitEthernet0/3     unassigned      YES unset  up                    up
+GigabitEthernet1/0     unassigned      YES unset  up                    up
+GigabitEthernet1/1     unassigned      YES unset  up                    up
+GigabitEthernet1/2     unassigned      YES unset  up                    up
+GigabitEthernet1/3     unassigned      YES unset  up                    up
+Vlan10                 10.2.10.254     YES manual up                    up
+Vlan75                 10.2.75.254     YES manual up                    up
+Vlan99                 192.168.134.160 YES manual up                    up
+
+
+--------------Interface Descriptions------------------
+
+Interface                      Status         Protocol Description
+Gi0/0                          up             up       UPLINK_ACCESS-SW1
+Gi0/1                          up             up       UPLINK_ACCESS-SW2
+Gi0/2                          up             up
+Gi0/3                          up             up
+Gi1/0                          up             up
+Gi1/1                          up             up       TOWARDS-WAN-CONN
+Gi1/2                          up             up
+Gi1/3                          up             up
+Vl10                           up             up
+Vl75                           up             up
+Vl99                           up             up
+
+
+------------------Device Up-Time----------------------
+
+CORE-SW01 uptime is 5 hours, 6 minutes
+
+
+---------------------Firmware Version-------------------
+
+Cisco IOS Software, vios_l2 Software (vios_l2-ADVENTERPRISEK9-M), Experimental Version 15.2(20170321:233949) [mmen 101]
+System image file is "flash0:/vios_l2-adventerprisek9-m"
+
+
+-----------------------Device Neighbors-----------------
+
+Device ID        Local Intrfce     Holdtme    Capability  Platform  Port ID
+ACCESS-SW1       Gig 0/0           155             R S I            Gig 0/0
+ACCESS-SW02      Gig 0/1           136             R S I            Gig 0/1
+
+Total cdp entries displayed : 2
+
+
+------------------------CPU History---------------------
+
+
+
+
+      622222111111111111111111111111111111111111111111111444442222
+      166666777777777722222000000000011111444440000000000333333333
+  100
+   90
+   80
+   70
+   60 *
+   50 *
+   40 *                                                  *****
+   30 ******                                             *****
+   20 ****************                                   *******
+   10 **********************************************************
+     0....5....1....1....2....2....3....3....4....4....5....5....6
+               0    5    0    5    0    5    0    5    0    5    0
+               CPU% per second (last 60 seconds)
+
+
+
+
+      435411111153211124441211111113144111114114111111411211111414
+      307142223453098413886336272229204793335465344355847887344739
+  100
+   90
+   80
+   70
+   60   *       *
+   50   *       *       **                  *  *      *        *
+   40 * **      *      ***         * **     *  *      *        *
+   30 ****      **     ***         * **     *  *      *  *     *
+   20 ###*      ##*#* *#**** * *   * #***   # *#    *** ****   *
+   10 ##########################################################
+     0....5....1....1....2....2....3....3....4....4....5....5....6
+               0    5    0    5    0    5    0    5    0    5    0
+               CPU% per minute (last 60 minutes)
+              * = maximum CPU%   # = average CPU%
+
+
+
+
+      54349
+      52036
+  100     *
+   90     *
+   80     *
+   70     *
+   60 *   *
+   50 *   *
+   40 ** **
+   30 ****#
+   20 ***##
+   10 #####
+     0....5....1....1....2....2....3....3....4....4....5....5....6....6....7..
+               0    5    0    5    0    5    0    5    0    5    0    5    0
+                   CPU% per hour (last 72 hours)
+                  * = maximum CPU%   # = average CPU%
+
+
+Error Here !!!!! !
+'CiscoIosBase' object has no attribute 'close'

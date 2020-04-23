@@ -1,0 +1,2352 @@
+-----------------------------
+----- Command: show run -----
+-----------------------------
+
+Building configuration...
+
+Current configuration : 31466 bytes
+!
+! Last configuration change at 10:05:40 UTC Thu Mar 12 2020 by mitsupport
+! NVRAM config last updated at 07:37:55 UTC Wed Jan 29 2020 by mitsupport
+!
+version 15.4
+service timestamps debug datetime msec
+service timestamps log datetime msec
+service password-encryption
+!
+hostname RO-UK-WAN
+!
+boot-start-marker
+boot system flash:/c800-universalk9-mz.SPA.154-3.M4.bin
+boot-end-marker
+!
+!
+enable secret 5 $1$vQV6$MeGFC7Hjn5mgCRhlKATWU0
+!
+aaa new-model
+!
+!
+aaa group server radius VPN
+ server-private 192.168.150.7 auth-port 1812 key 7 044D1B081C244F1F5B4A
+ server-private 192.168.151.7 auth-port 1812 key 7 105819171612115A5E57
+ ip radius source-interface FastEthernet4.150
+!
+aaa authentication login default local
+aaa authentication login Console-Access local-case
+aaa authentication login VTY-Access local-case
+aaa authentication login userauthen local
+aaa authentication login VPN_Client group VPN
+aaa authentication login VPNUSERSAUTH local
+aaa authorization exec default local if-authenticated 
+aaa authorization network groupauthor local 
+aaa authorization network VPN_Client group VPN 
+aaa authorization network VPNUSERS local 
+!
+!
+!
+!
+!
+aaa session-id common
+service-module wlan-ap 0 bootimage autonomous
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+
+
+!
+!
+!
+!
+ip flow-egress input-interface
+ip flow-cache timeout active 1
+no ip domain lookup
+ip domain name wso2.com
+ip cef
+no ipv6 cef
+!
+!
+!
+!
+!
+multilink bundle-name authenticated
+!
+!
+!
+!
+!
+!
+!
+!
+cts logging verbose
+license udi pid C881W-E-K9 sn FCZ172992FN
+!
+!
+vtp mode transparent
+username wso2 privilege 15 secret 5 $1$7R0r$3qDzHBNy9cTA3X1Roy5mx1
+username mitsupport privilege 15 secret 5 $1$9RrB$vKL5X8ladHxsHxAY8xSB7/
+username wso2-remoteuser privilege 0 secret 5 $1$rtgq$ITL0mOCFjEwnX1k.qv4SG/
+username Janaka privilege 0 password 7 063C021B40774D033F1E3D2F430F7F11290E3F1B6109211E
+username Saneth privilege 0 password 7 063C280B0F42301306473F44063130063E09290C38225455
+username Samith privilege 0 password 7 081803540A012B1D510858290D0E770514132F332A320B08
+username Firzhan privilege 0 password 7 107703370D2E1F4F355707210D7D770F15350B2C37216453
+username Pandula privilege 0 password 7 143A08214F09051C1D7B1D15383E1D2C0E3B5F7742176603
+username Madawa privilege 0 password 7 05261C4B0B45631312460E3D2C3E09070F010860182F3A10
+username sithumini privilege 0 password 7 115E5F5C10335C2B430E1301397D6C1F48243356170E0149
+username lakindu secret 5 $1$jFcy$QM0jWorTB7fQAj6cRpnvn0
+!
+!
+!
+!
+!
+vlan 151 
+!
+vlan 350
+ name Mgmt.
+!
+vlan 999 
+!
+vlan 1500
+ name New-ISP
+!
+vlan 2824
+ name ISP-LINK
+!
+track 100 ip sla 100 reachability
+!
+track 200 ip sla 200 reachability
+!
+!
+policy-map SHAPE_100
+ class class-default
+  shape average 100000000
+!
+! 
+crypto keyring keyring-vpn-93a4d8d8-0  
+  local-address 80.209.143.14
+  pre-shared-key address 34.246.119.20 key Hs733bcb3i6sd
+crypto keyring keyring-vpn-93a4d8d8-1  
+  local-address 80.209.143.14
+  pre-shared-key address 52.18.253.172 key Hs733bcb3i6sd
+!
+crypto isakmp policy 3
+ encr 3des
+ authentication pre-share
+ group 2
+!
+crypto isakmp policy 10
+ encr aes
+ authentication pre-share
+ group 2
+!
+crypto isakmp policy 11
+ encr 3des
+ authentication pre-share
+ group 2
+!
+crypto isakmp policy 20
+ encr 3des
+ hash md5
+ authentication pre-share
+ group 2
+!
+crypto isakmp policy 200
+ encr aes
+ authentication pre-share
+ group 2
+ lifetime 28800
+!
+crypto isakmp policy 201
+ encr aes
+ authentication pre-share
+ group 2
+ lifetime 28800
+crypto isakmp key Hs733bcb3i6sd address 34.246.119.20  
+crypto isakmp key Hs733bcb3i6sd address 52.18.253.172  
+crypto isakmp key wso2_DMVPN# address 0.0.0.0        
+crypto isakmp keepalive 15
+!
+crypto isakmp client configuration group vpnclient
+ key cisco123
+ dns 8.8.8.8
+ domain wso2.com
+ pool ippool
+ acl 102
+!
+crypto isakmp client configuration group vpnclient_rad
+ key cisco123
+ dns 8.8.8.8
+ domain wso2.com
+ pool ippool
+ acl 102
+ save-password
+crypto isakmp profile vpnclient.cisco.com
+   match identity group vpnclient_rad
+   client authentication list VPN_Client
+   isakmp authorization list VPN_Client
+   client configuration address respond
+crypto isakmp profile isakmp-vpn-93a4d8d8-0
+   keyring keyring-vpn-93a4d8d8-0
+   match identity address 34.246.119.20 255.255.255.255 
+   local-address 80.209.143.14
+crypto isakmp profile isakmp-vpn-93a4d8d8-1
+   keyring keyring-vpn-93a4d8d8-1
+   match identity address 52.18.253.172 255.255.255.255 
+   local-address 80.209.143.14
+!
+crypto ipsec security-association replay window-size 128
+!
+crypto ipsec transform-set ESP-3DES-SHA-Transport esp-3des esp-sha-hmac 
+ mode transport
+crypto ipsec transform-set ESP-AES-128-SHA esp-aes esp-sha-hmac 
+ mode tunnel
+crypto ipsec transform-set myset esp-3des esp-md5-hmac 
+ mode tunnel
+crypto ipsec transform-set TRANS-DES esp-des esp-md5-hmac 
+ mode tunnel
+crypto ipsec transform-set transform-amzn esp-aes esp-sha-hmac 
+ mode tunnel
+crypto ipsec transform-set ipsec-prop-vpn-93a4d8d8-0 esp-aes esp-sha-hmac 
+ mode tunnel
+crypto ipsec transform-set ipsec-prop-vpn-93a4d8d8-1 esp-aes esp-sha-hmac 
+ mode tunnel
+crypto ipsec df-bit clear
+!
+crypto ipsec profile Profile-DMVPN
+ set transform-set ESP-3DES-SHA-Transport 
+!
+!
+crypto ipsec profile ipsec-vpn-93a4d8d8-0
+ set transform-set ipsec-prop-vpn-93a4d8d8-0 
+ set pfs group2
+!
+crypto ipsec profile ipsec-vpn-93a4d8d8-1
+ set transform-set ipsec-prop-vpn-93a4d8d8-1 
+ set pfs group2
+!
+!
+crypto dynamic-map DYN-MAP 11
+ set security-association lifetime seconds 28800
+ set transform-set TRANS-DES 
+ set isakmp-profile vpnclient.cisco.com
+ reverse-route
+!
+crypto dynamic-map dynmap 10
+ set security-association lifetime seconds 28800
+ set transform-set myset 
+ reverse-route
+!
+!
+crypto map VPN local-address Vlan2824
+crypto map VPN 11 ipsec-isakmp dynamic DYN-MAP 
+!
+crypto map clientmap client authentication list VPNUSERSAUTH
+crypto map clientmap isakmp authorization list VPNUSERS
+crypto map clientmap client configuration address respond
+crypto map clientmap 3 ipsec-isakmp 
+ description Tunnel-to-AWS-VPN
+ set peer 34.246.119.20
+ set peer 52.18.253.172
+ set ip access-group amzn-filter in
+ set transform-set transform-amzn 
+ set pfs group2
+ match address acl-amzn
+crypto map clientmap 10 ipsec-isakmp dynamic dynmap 
+!
+!
+!
+!
+!
+!
+interface Tunnel1
+ ip address 169.254.20.246 255.255.255.252
+ ip virtual-reassembly in
+ ip tcp adjust-mss 1379
+ tunnel source 80.209.143.14
+ tunnel mode ipsec ipv4
+ tunnel destination 34.246.119.20
+ tunnel protection ipsec profile ipsec-vpn-93a4d8d8-0
+!
+interface Tunnel2
+ ip address 169.254.23.66 255.255.255.252
+ ip virtual-reassembly in
+ ip tcp adjust-mss 1379
+ tunnel source 80.209.143.14
+ tunnel mode ipsec ipv4
+ tunnel destination 52.18.253.172
+ tunnel protection ipsec profile ipsec-vpn-93a4d8d8-1
+!
+interface Tunnel20
+ description DMVPN_10.2.2.0_SPOKE_UK
+ bandwidth 102400
+ ip address 10.2.2.3 255.255.255.0
+ no ip redirects
+ ip mtu 1400
+ ip nhrp authentication cisco20
+ ip nhrp map multicast dynamic
+ ip nhrp map multicast 203.94.95.100
+ ip nhrp map 10.2.2.1 203.94.95.100
+ ip nhrp network-id 12345
+ ip nhrp holdtime 600
+ ip nhrp nhs 10.2.2.1
+ ip nhrp shortcut
+ tunnel source Vlan1500
+ tunnel mode gre multipoint
+ tunnel key 10000
+ tunnel protection ipsec profile Profile-DMVPN
+!
+interface FastEthernet0
+ switchport trunk native vlan 2824
+ switchport mode trunk
+ no ip address
+!
+interface FastEthernet1
+ switchport access vlan 151
+ no ip address
+!
+interface FastEthernet2
+ switchport trunk native vlan 1500
+ switchport mode trunk
+ no ip address
+!
+interface FastEthernet3
+ no ip address
+ shutdown
+!
+interface FastEthernet4
+ description ## SW-UK-24POE:Gig 1/0/3
+ no ip address
+ no ip route-cache
+ duplex auto
+ speed auto
+!
+interface FastEthernet4.20
+ description ## WSO2 Infra ##
+ encapsulation dot1Q 20
+ ip address 10.150.10.254 255.255.255.0
+ ip helper-address 192.168.150.5
+ ip helper-address 192.168.128.5
+ ip helper-address 192.168.151.5
+ ip flow ingress
+ ip flow egress
+ ip nat inside
+ ip virtual-reassembly in
+ no ip route-cache
+!
+interface FastEthernet4.50
+ description ## ENG_01 ##
+ encapsulation dot1Q 50
+ ip address 10.150.0.254 255.255.255.0
+ ip helper-address 192.168.150.5
+ ip helper-address 192.168.128.5
+ ip helper-address 192.168.151.5
+ ip flow ingress
+ ip flow egress
+ ip nat inside
+ ip virtual-reassembly in
+ no ip route-cache
+!
+interface FastEthernet4.51
+ description ## ENG_02 ##
+ encapsulation dot1Q 51
+ ip address 10.150.1.254 255.255.255.0
+ ip helper-address 192.168.150.5
+ ip helper-address 192.168.128.5
+ ip helper-address 192.168.151.5
+ ip flow ingress
+ ip flow egress
+ ip nat inside
+ ip virtual-reassembly in
+ no ip route-cache
+!
+interface FastEthernet4.52
+ description ## Admin_Finance ##
+ encapsulation dot1Q 52
+ ip address 10.150.2.254 255.255.255.0
+ ip helper-address 192.168.150.5
+ ip helper-address 192.168.128.5
+ ip helper-address 192.168.151.5
+ ip flow ingress
+ ip flow egress
+ ip nat inside
+ ip virtual-reassembly in
+ no ip route-cache
+!
+interface FastEthernet4.53
+ description ## Non_Tech ##
+ encapsulation dot1Q 53
+ ip address 10.150.3.254 255.255.255.0
+ ip helper-address 192.168.150.5
+ ip helper-address 192.168.128.5
+ ip helper-address 192.168.151.5
+ ip flow ingress
+ ip flow egress
+ ip nat inside
+ ip virtual-reassembly in
+ no ip route-cache
+!
+interface FastEthernet4.54
+ description ## Short_Term ##
+ encapsulation dot1Q 54
+ ip address 10.150.4.254 255.255.255.0
+ ip helper-address 192.168.150.5
+ ip helper-address 192.168.128.5
+ ip helper-address 192.168.151.5
+ ip flow ingress
+ ip flow egress
+ ip nat inside
+ ip virtual-reassembly in
+ no ip route-cache
+!
+interface FastEthernet4.55
+ description ## ENG_03 ##
+ encapsulation dot1Q 55
+ ip address 10.150.5.254 255.255.255.0
+ ip helper-address 192.168.150.5
+ ip helper-address 192.168.128.5
+ ip helper-address 192.168.151.5
+ ip flow ingress
+ ip flow egress
+ ip nat inside
+ ip virtual-reassembly in
+ no ip route-cache
+!
+interface FastEthernet4.56
+ description ## ENG_04 ##
+ encapsulation dot1Q 56
+ ip address 10.150.6.254 255.255.255.0
+ ip helper-address 192.168.150.5
+ ip helper-address 192.168.128.5
+ ip helper-address 192.168.151.5
+ ip flow ingress
+ ip flow egress
+ ip nat inside
+ ip virtual-reassembly in
+ no ip route-cache
+!
+interface FastEthernet4.57
+ description ## ENG_05 ##
+ encapsulation dot1Q 57
+ ip address 10.150.7.254 255.255.255.0
+ ip helper-address 192.168.150.5
+ ip helper-address 192.168.128.5
+ ip helper-address 192.168.151.5
+ ip flow ingress
+ ip flow egress
+ ip nat inside
+ ip virtual-reassembly in
+ no ip route-cache
+!
+interface FastEthernet4.58
+ description ## ENG_06 ##
+ encapsulation dot1Q 58
+ ip address 10.150.8.254 255.255.255.0
+ ip helper-address 192.168.150.5
+ ip helper-address 192.168.128.5
+ ip helper-address 192.168.151.5
+ ip flow ingress
+ ip flow egress
+ ip nat inside
+ ip virtual-reassembly in
+ no ip route-cache
+!
+interface FastEthernet4.59
+ description ## IOT ##
+ encapsulation dot1Q 59
+ ip address 10.150.9.254 255.255.255.0
+ ip helper-address 192.168.150.5
+ ip helper-address 192.168.128.5
+ ip helper-address 192.168.151.5
+ ip flow ingress
+ ip flow egress
+ ip nat inside
+ ip virtual-reassembly in
+ no ip route-cache
+!
+interface FastEthernet4.150
+ description ## SERVERS ##
+ encapsulation dot1Q 150
+ ip address 192.168.150.254 255.255.255.0
+ ip helper-address 192.168.150.5
+ ip flow ingress
+ ip flow egress
+ ip nat inside
+ ip virtual-reassembly in
+ no ip route-cache
+!
+interface FastEthernet4.230
+ description ## VOIP ##
+ encapsulation dot1Q 230
+ ip address 10.20.30.254 255.255.255.0
+ ip flow ingress
+ ip flow egress
+ ip nat inside
+ ip virtual-reassembly in
+ no ip route-cache
+!
+interface FastEthernet4.350
+ description ## MANAGEMENT ##
+ encapsulation dot1Q 350
+ ip address 172.16.50.254 255.255.255.0
+ ip flow ingress
+ ip flow egress
+ no ip route-cache
+!
+interface FastEthernet4.550
+ description ## GUEST ##
+ encapsulation dot1Q 550
+ ip address 10.10.50.254 255.255.255.0
+ ip helper-address 192.168.150.5
+ ip helper-address 192.168.128.5
+ ip helper-address 192.168.151.5
+ ip flow ingress
+ ip flow egress
+ ip nat inside
+ ip virtual-reassembly in
+ no ip route-cache
+!
+interface Wlan-GigabitEthernet0
+ description Internal switch interface connecting to the embedded AP
+ no ip address
+!
+interface wlan-ap0
+ description Embedded Service module interface to manage the embedded AP
+ no ip address
+!
+interface Vlan1
+ no ip address
+!
+interface Vlan2
+ no ip address
+!
+interface Vlan151
+ description ## SERVERS-BACKUP ##
+ ip address 192.168.151.254 255.255.255.0
+ ip flow ingress
+ ip flow egress
+ ip nat inside
+ ip virtual-reassembly in
+!
+interface Vlan350
+ no ip address
+!
+interface Vlan999
+ ip address 91.143.79.154 255.255.255.224
+ ip flow ingress
+ ip flow egress
+ ip virtual-reassembly in
+ shutdown
+!
+interface Vlan1500
+ ip address 195.188.181.210 255.255.255.248
+ ip flow ingress
+ ip flow egress
+ ip nat outside
+ ip virtual-reassembly in
+ crypto map clientmap
+!
+interface Vlan2824
+ ip address 80.209.143.14 255.255.255.252
+ ip flow ingress
+ ip flow egress
+ ip virtual-reassembly in
+ crypto map clientmap
+!
+!
+router eigrp 100
+ network 10.2.2.0 0.0.0.255
+ redistribute connected route-map CONNECTED_TO_EIGRP
+!
+ip local pool ippool 172.16.3.161 172.16.3.190
+ip forward-protocol nd
+no ip http server
+no ip http secure-server
+!
+ip flow-export version 9
+ip flow-export destination 192.168.150.20 9996
+ip flow-export destination 192.168.100.26 99
+!
+ip nat pool public_ip_1 91.143.79.154 91.143.79.154 prefix-length 27
+ip nat pool public_ip_3 195.188.181.210 195.188.181.210 prefix-length 29
+ip nat pool public_ip_2 80.209.143.14 80.209.143.14 prefix-length 30
+ip nat inside source list acl-nat interface Vlan1500 overload
+ip route 10.19.0.0 255.255.0.0 Tunnel1 track 100
+ip route 10.19.0.0 255.255.0.0 Tunnel2 track 200
+ip route 0.0.0.0 0.0.0.0 195.188.181.209
+ip route 34.246.119.20 255.255.255.255 80.209.143.13
+ip route 52.18.253.172 255.255.255.255 80.209.143.13
+ip ssh time-out 60
+ip ssh authentication-retries 2
+ip ssh version 2
+!
+ip access-list extended Device-Mgmt
+ permit ip 172.16.2.0 0.0.0.255 any
+ permit ip 10.100.10.0 0.0.0.255 any
+ permit ip 203.94.95.0 0.0.0.255 any
+ip access-list extended WSO2_UK_SL_Networks
+ permit ip 10.150.0.0 0.0.255.255 10.100.32.0 0.0.0.255
+ permit ip 10.150.0.0 0.0.255.255 192.168.0.0 0.0.0.255
+ permit ip 10.150.0.0 0.0.255.255 192.168.1.0 0.0.0.255
+ permit ip 10.150.0.0 0.0.255.255 10.100.0.0 0.0.0.255
+ permit ip 10.150.0.0 0.0.255.255 10.100.1.0 0.0.0.255
+ permit ip 10.150.0.0 0.0.255.255 10.100.2.0 0.0.0.255
+ permit ip 10.150.0.0 0.0.255.255 10.100.3.0 0.0.0.255
+ permit ip 10.150.0.0 0.0.255.255 10.100.4.0 0.0.0.255
+ permit ip 10.150.0.0 0.0.255.255 10.100.5.0 0.0.0.255
+ permit ip 10.150.0.0 0.0.255.255 192.168.16.0 0.0.3.255
+ permit ip 10.150.0.0 0.0.255.255 192.168.32.0 0.0.0.255
+ permit ip 10.150.0.0 0.0.255.255 192.168.3.0 0.0.0.255
+ permit ip 10.150.0.0 0.0.255.255 172.26.0.0 0.0.0.255
+ permit ip 10.150.0.0 0.0.255.255 172.25.0.0 0.0.0.255
+ permit ip 10.150.0.0 0.0.255.255 192.168.2.0 0.0.0.255
+ permit ip 10.150.0.0 0.0.255.255 172.16.2.0 0.0.0.255
+ permit ip 10.150.0.0 0.0.255.255 10.20.1.0 0.0.0.255
+ permit ip 10.150.0.0 0.0.255.255 10.20.2.0 0.0.0.255
+ permit ip 10.150.0.0 0.0.255.255 10.20.10.0 0.0.0.255
+ permit ip 10.150.0.0 0.0.255.255 10.40.0.0 0.0.0.255
+ permit ip 10.150.0.0 0.0.255.255 192.168.4.0 0.0.3.255
+ permit ip 10.150.0.0 0.0.255.255 10.100.6.0 0.0.0.255
+ permit ip 10.150.0.0 0.0.255.255 10.100.7.0 0.0.0.255
+ permit ip 10.150.0.0 0.0.255.255 10.100.8.0 0.0.0.255
+ permit ip 10.150.0.0 0.0.255.255 10.100.9.0 0.0.0.255
+ permit ip 10.150.0.0 0.0.255.255 192.168.8.0 0.0.0.255
+ permit ip 10.150.0.0 0.0.255.255 192.168.48.0 0.0.3.255
+ permit ip 10.150.0.0 0.0.255.255 192.168.52.0 0.0.3.255
+ permit ip 10.150.0.0 0.0.255.255 192.168.56.0 0.0.0.255
+ permit ip 10.150.0.0 0.0.255.255 192.168.57.0 0.0.0.255
+ permit ip 10.150.0.0 0.0.255.255 192.168.58.0 0.0.0.255
+ permit ip 10.150.0.0 0.0.255.255 192.168.59.0 0.0.0.255
+ permit ip 10.150.0.0 0.0.255.255 192.168.60.0 0.0.0.255
+ permit ip 10.20.30.0 0.0.0.255 10.100.32.0 0.0.0.255
+ permit ip 10.20.30.0 0.0.0.255 192.168.0.0 0.0.0.255
+ permit ip 10.20.30.0 0.0.0.255 192.168.1.0 0.0.0.255
+ permit ip 10.20.30.0 0.0.0.255 10.100.0.0 0.0.0.255
+ permit ip 10.20.30.0 0.0.0.255 10.100.1.0 0.0.0.255
+ permit ip 10.20.30.0 0.0.0.255 10.100.2.0 0.0.0.255
+ permit ip 10.20.30.0 0.0.0.255 10.100.3.0 0.0.0.255
+ permit ip 10.20.30.0 0.0.0.255 10.100.4.0 0.0.0.255
+ permit ip 10.20.30.0 0.0.0.255 10.100.5.0 0.0.0.255
+ permit ip 10.20.30.0 0.0.0.255 192.168.16.0 0.0.3.255
+ permit ip 10.20.30.0 0.0.0.255 192.168.32.0 0.0.0.255
+ permit ip 10.20.30.0 0.0.0.255 192.168.3.0 0.0.0.255
+ permit ip 10.20.30.0 0.0.0.255 172.26.0.0 0.0.0.255
+ permit ip 10.20.30.0 0.0.0.255 172.25.0.0 0.0.0.255
+ permit ip 10.20.30.0 0.0.0.255 192.168.2.0 0.0.0.255
+ permit ip 10.20.30.0 0.0.0.255 172.16.2.0 0.0.0.255
+ permit ip 10.20.30.0 0.0.0.255 10.20.1.0 0.0.0.255
+ permit ip 10.20.30.0 0.0.0.255 10.20.2.0 0.0.0.255
+ permit ip 10.20.30.0 0.0.0.255 10.20.10.0 0.0.0.255
+ permit ip 10.20.30.0 0.0.0.255 10.40.0.0 0.0.0.255
+ permit ip 10.20.30.0 0.0.0.255 192.168.4.0 0.0.3.255
+ permit ip 10.20.30.0 0.0.0.255 10.100.6.0 0.0.0.255
+ permit ip 10.20.30.0 0.0.0.255 10.100.7.0 0.0.0.255
+ permit ip 10.20.30.0 0.0.0.255 10.100.8.0 0.0.0.255
+ permit ip 10.20.30.0 0.0.0.255 10.100.9.0 0.0.0.255
+ permit ip 10.20.30.0 0.0.0.255 192.168.8.0 0.0.0.255
+ permit ip 10.20.30.0 0.0.0.255 192.168.48.0 0.0.3.255
+ permit ip 10.20.30.0 0.0.0.255 192.168.52.0 0.0.3.255
+ permit ip 10.20.30.0 0.0.0.255 192.168.56.0 0.0.0.255
+ permit ip 10.20.30.0 0.0.0.255 192.168.57.0 0.0.0.255
+ permit ip 10.20.30.0 0.0.0.255 192.168.58.0 0.0.0.255
+ permit ip 10.20.30.0 0.0.0.255 192.168.59.0 0.0.0.255
+ permit ip 10.20.30.0 0.0.0.255 192.168.60.0 0.0.0.255
+ permit ip 192.168.150.0 0.0.0.255 10.100.32.0 0.0.0.255
+ permit ip 192.168.150.0 0.0.0.255 192.168.0.0 0.0.0.255
+ permit ip 192.168.150.0 0.0.0.255 192.168.1.0 0.0.0.255
+ permit ip 192.168.150.0 0.0.0.255 10.100.0.0 0.0.0.255
+ permit ip 192.168.150.0 0.0.0.255 10.100.1.0 0.0.0.255
+ permit ip 192.168.150.0 0.0.0.255 10.100.2.0 0.0.0.255
+ permit ip 192.168.150.0 0.0.0.255 10.100.3.0 0.0.0.255
+ permit ip 192.168.150.0 0.0.0.255 10.100.4.0 0.0.0.255
+ permit ip 192.168.150.0 0.0.0.255 10.100.5.0 0.0.0.255
+ permit ip 192.168.150.0 0.0.0.255 192.168.16.0 0.0.3.255
+ permit ip 192.168.150.0 0.0.0.255 192.168.32.0 0.0.0.255
+ permit ip 192.168.150.0 0.0.0.255 192.168.3.0 0.0.0.255
+ permit ip 192.168.150.0 0.0.0.255 172.26.0.0 0.0.0.255
+ permit ip 192.168.150.0 0.0.0.255 172.25.0.0 0.0.0.255
+ permit ip 192.168.150.0 0.0.0.255 192.168.2.0 0.0.0.255
+ permit ip 192.168.150.0 0.0.0.255 172.16.2.0 0.0.0.255
+ permit ip 192.168.150.0 0.0.0.255 10.20.1.0 0.0.0.255
+ permit ip 192.168.150.0 0.0.0.255 10.20.2.0 0.0.0.255
+ permit ip 192.168.150.0 0.0.0.255 10.20.10.0 0.0.0.255
+ permit ip 192.168.150.0 0.0.0.255 10.40.0.0 0.0.0.255
+ permit ip 192.168.150.0 0.0.0.255 192.168.4.0 0.0.3.255
+ permit ip 192.168.150.0 0.0.0.255 10.100.6.0 0.0.0.255
+ permit ip 192.168.150.0 0.0.0.255 10.100.7.0 0.0.0.255
+ permit ip 192.168.150.0 0.0.0.255 10.100.8.0 0.0.0.255
+ permit ip 192.168.150.0 0.0.0.255 10.100.9.0 0.0.0.255
+ permit ip 192.168.150.0 0.0.0.255 192.168.8.0 0.0.0.255
+ permit ip 192.168.150.0 0.0.0.255 192.168.48.0 0.0.3.255
+ permit ip 192.168.150.0 0.0.0.255 192.168.52.0 0.0.3.255
+ permit ip 192.168.150.0 0.0.0.255 192.168.56.0 0.0.0.255
+ permit ip 192.168.150.0 0.0.0.255 192.168.57.0 0.0.0.255
+ permit ip 192.168.150.0 0.0.0.255 192.168.58.0 0.0.0.255
+ permit ip 192.168.150.0 0.0.0.255 192.168.59.0 0.0.0.255
+ permit ip 192.168.150.0 0.0.0.255 192.168.60.0 0.0.0.255
+ permit ip 172.16.50.0 0.0.0.255 10.100.32.0 0.0.0.255
+ permit ip 172.16.50.0 0.0.0.255 192.168.0.0 0.0.0.255
+ permit ip 172.16.50.0 0.0.0.255 192.168.1.0 0.0.0.255
+ permit ip 172.16.50.0 0.0.0.255 10.100.0.0 0.0.0.255
+ permit ip 172.16.50.0 0.0.0.255 10.100.1.0 0.0.0.255
+ permit ip 172.16.50.0 0.0.0.255 10.100.2.0 0.0.0.255
+ permit ip 172.16.50.0 0.0.0.255 10.100.3.0 0.0.0.255
+ permit ip 172.16.50.0 0.0.0.255 10.100.4.0 0.0.0.255
+ permit ip 172.16.50.0 0.0.0.255 10.100.5.0 0.0.0.255
+ permit ip 172.16.50.0 0.0.0.255 192.168.16.0 0.0.3.255
+ permit ip 172.16.50.0 0.0.0.255 192.168.32.0 0.0.0.255
+ permit ip 172.16.50.0 0.0.0.255 192.168.3.0 0.0.0.255
+ permit ip 172.16.50.0 0.0.0.255 172.26.0.0 0.0.0.255
+ permit ip 172.16.50.0 0.0.0.255 172.25.0.0 0.0.0.255
+ permit ip 172.16.50.0 0.0.0.255 192.168.2.0 0.0.0.255
+ permit ip 172.16.50.0 0.0.0.255 172.16.2.0 0.0.0.255
+ permit ip 172.16.50.0 0.0.0.255 10.20.1.0 0.0.0.255
+ permit ip 172.16.50.0 0.0.0.255 10.20.2.0 0.0.0.255
+ permit ip 172.16.50.0 0.0.0.255 10.20.10.0 0.0.0.255
+ permit ip 172.16.50.0 0.0.0.255 192.168.4.0 0.0.3.255
+ permit ip 172.16.50.0 0.0.0.255 10.100.6.0 0.0.0.255
+ permit ip 172.16.50.0 0.0.0.255 10.100.7.0 0.0.0.255
+ permit ip 172.16.50.0 0.0.0.255 10.100.8.0 0.0.0.255
+ permit ip 172.16.50.0 0.0.0.255 10.100.9.0 0.0.0.255
+ permit ip 172.16.50.0 0.0.0.255 192.168.8.0 0.0.0.255
+ permit ip 172.16.50.0 0.0.0.255 192.168.48.0 0.0.3.255
+ permit ip 172.16.50.0 0.0.0.255 192.168.52.0 0.0.3.255
+ permit ip 172.16.50.0 0.0.0.255 192.168.56.0 0.0.0.255
+ permit ip 172.16.50.0 0.0.0.255 192.168.57.0 0.0.0.255
+ permit ip 172.16.50.0 0.0.0.255 192.168.58.0 0.0.0.255
+ permit ip 172.16.50.0 0.0.0.255 192.168.59.0 0.0.0.255
+ permit ip 172.16.50.0 0.0.0.255 192.168.60.0 0.0.0.255
+ permit ip 192.168.151.0 0.0.0.255 10.100.32.0 0.0.0.255
+ permit ip 192.168.151.0 0.0.0.255 192.168.0.0 0.0.0.255
+ permit ip 192.168.151.0 0.0.0.255 192.168.1.0 0.0.0.255
+ permit ip 192.168.151.0 0.0.0.255 10.100.0.0 0.0.0.255
+ permit ip 192.168.151.0 0.0.0.255 10.100.1.0 0.0.0.255
+ permit ip 192.168.151.0 0.0.0.255 10.100.2.0 0.0.0.255
+ permit ip 192.168.151.0 0.0.0.255 10.100.3.0 0.0.0.255
+ permit ip 192.168.151.0 0.0.0.255 10.100.4.0 0.0.0.255
+ permit ip 192.168.151.0 0.0.0.255 10.100.5.0 0.0.0.255
+ permit ip 192.168.151.0 0.0.0.255 192.168.16.0 0.0.3.255
+ permit ip 192.168.151.0 0.0.0.255 192.168.32.0 0.0.0.255
+ permit ip 192.168.151.0 0.0.0.255 192.168.3.0 0.0.0.255
+ permit ip 192.168.151.0 0.0.0.255 172.26.0.0 0.0.0.255
+ permit ip 192.168.151.0 0.0.0.255 172.25.0.0 0.0.0.255
+ permit ip 192.168.151.0 0.0.0.255 192.168.2.0 0.0.0.255
+ permit ip 192.168.151.0 0.0.0.255 172.16.2.0 0.0.0.255
+ permit ip 192.168.151.0 0.0.0.255 10.20.1.0 0.0.0.255
+ permit ip 192.168.151.0 0.0.0.255 10.20.2.0 0.0.0.255
+ permit ip 192.168.151.0 0.0.0.255 10.20.10.0 0.0.0.255
+ permit ip 192.168.151.0 0.0.0.255 10.40.0.0 0.0.0.255
+ permit ip 192.168.151.0 0.0.0.255 192.168.4.0 0.0.3.255
+ permit ip 192.168.151.0 0.0.0.255 10.100.6.0 0.0.0.255
+ permit ip 192.168.151.0 0.0.0.255 10.100.7.0 0.0.0.255
+ permit ip 192.168.151.0 0.0.0.255 10.100.8.0 0.0.0.255
+ permit ip 192.168.151.0 0.0.0.255 10.100.9.0 0.0.0.255
+ permit ip 192.168.151.0 0.0.0.255 192.168.8.0 0.0.0.255
+ permit ip 192.168.151.0 0.0.0.255 192.168.48.0 0.0.3.255
+ permit ip 192.168.151.0 0.0.0.255 192.168.52.0 0.0.3.255
+ permit ip 192.168.151.0 0.0.0.255 192.168.56.0 0.0.0.255
+ permit ip 192.168.151.0 0.0.0.255 192.168.57.0 0.0.0.255
+ permit ip 192.168.151.0 0.0.0.255 192.168.58.0 0.0.0.255
+ permit ip 192.168.151.0 0.0.0.255 192.168.59.0 0.0.0.255
+ permit ip 192.168.151.0 0.0.0.255 192.168.60.0 0.0.0.255
+ permit ip 10.10.50.0 0.0.0.255 10.100.32.0 0.0.0.255
+ permit ip 10.10.50.0 0.0.0.255 192.168.0.0 0.0.0.255
+ permit ip 10.10.50.0 0.0.0.255 192.168.1.0 0.0.0.255
+ permit ip 10.10.50.0 0.0.0.255 10.100.0.0 0.0.0.255
+ permit ip 10.10.50.0 0.0.0.255 10.100.1.0 0.0.0.255
+ permit ip 10.10.50.0 0.0.0.255 10.100.2.0 0.0.0.255
+ permit ip 10.10.50.0 0.0.0.255 10.100.3.0 0.0.0.255
+ permit ip 10.10.50.0 0.0.0.255 10.100.4.0 0.0.0.255
+ permit ip 10.10.50.0 0.0.0.255 10.100.5.0 0.0.0.255
+ permit ip 10.10.50.0 0.0.0.255 192.168.16.0 0.0.3.255
+ permit ip 10.10.50.0 0.0.0.255 192.168.32.0 0.0.0.255
+ permit ip 10.10.50.0 0.0.0.255 192.168.3.0 0.0.0.255
+ permit ip 10.10.50.0 0.0.0.255 172.26.0.0 0.0.0.255
+ permit ip 10.10.50.0 0.0.0.255 172.25.0.0 0.0.0.255
+ permit ip 10.10.50.0 0.0.0.255 192.168.2.0 0.0.0.255
+ permit ip 10.10.50.0 0.0.0.255 172.16.2.0 0.0.0.255
+ permit ip 10.10.50.0 0.0.0.255 10.20.1.0 0.0.0.255
+ permit ip 10.10.50.0 0.0.0.255 10.20.2.0 0.0.0.255
+ permit ip 10.10.50.0 0.0.0.255 10.20.10.0 0.0.0.255
+ permit ip 10.10.50.0 0.0.0.255 10.40.0.0 0.0.0.255
+ permit ip 10.10.50.0 0.0.0.255 192.168.4.0 0.0.3.255
+ permit ip 10.10.50.0 0.0.0.255 10.100.6.0 0.0.0.255
+ permit ip 10.10.50.0 0.0.0.255 10.100.7.0 0.0.0.255
+ permit ip 10.10.50.0 0.0.0.255 10.100.8.0 0.0.0.255
+ permit ip 10.10.50.0 0.0.0.255 10.100.9.0 0.0.0.255
+ permit ip 10.10.50.0 0.0.0.255 192.168.8.0 0.0.0.255
+ permit ip 10.10.50.0 0.0.0.255 192.168.48.0 0.0.3.255
+ permit ip 10.10.50.0 0.0.0.255 192.168.52.0 0.0.3.255
+ permit ip 10.10.50.0 0.0.0.255 192.168.56.0 0.0.0.255
+ permit ip 10.10.50.0 0.0.0.255 192.168.57.0 0.0.0.255
+ permit ip 10.10.50.0 0.0.0.255 192.168.58.0 0.0.0.255
+ permit ip 10.10.50.0 0.0.0.255 192.168.59.0 0.0.0.255
+ permit ip 10.10.50.0 0.0.0.255 192.168.60.0 0.0.0.255
+ permit ip 10.150.0.0 0.0.255.255 192.168.49.0 0.0.0.255
+ permit ip 10.150.0.0 0.0.255.255 192.168.61.0 0.0.0.255
+ permit ip 10.150.0.0 0.0.255.255 192.168.89.0 0.0.0.255
+ permit ip 10.20.30.0 0.0.0.255 192.168.49.0 0.0.0.255
+ permit ip 10.20.30.0 0.0.0.255 192.168.61.0 0.0.0.255
+ permit ip 10.20.30.0 0.0.0.255 192.168.89.0 0.0.0.255
+ permit ip 192.168.150.0 0.0.0.255 192.168.49.0 0.0.0.255
+ permit ip 192.168.150.0 0.0.0.255 192.168.61.0 0.0.0.255
+ permit ip 192.168.150.0 0.0.0.255 192.168.89.0 0.0.0.255
+ permit ip 172.16.50.0 0.0.0.255 192.168.49.0 0.0.0.255
+ permit ip 172.16.50.0 0.0.0.255 192.168.61.0 0.0.0.255
+ permit ip 172.16.50.0 0.0.0.255 192.168.89.0 0.0.0.255
+ permit ip 192.168.151.0 0.0.0.255 192.168.49.0 0.0.0.255
+ permit ip 192.168.151.0 0.0.0.255 192.168.61.0 0.0.0.255
+ permit ip 192.168.151.0 0.0.0.255 192.168.89.0 0.0.0.255
+ permit ip 10.10.50.0 0.0.0.255 192.168.49.0 0.0.0.255
+ permit ip 10.10.50.0 0.0.0.255 192.168.61.0 0.0.0.255
+ permit ip 10.10.50.0 0.0.0.255 192.168.89.0 0.0.0.255
+ip access-list extended acl-amzn
+ permit ip any 10.19.0.0 0.0.255.255
+ permit ip 10.19.0.0 0.0.255.255 any
+ip access-list extended acl-amzn-nat
+ deny   ip 192.168.151.0 0.0.0.255 172.16.3.0 0.0.0.255
+ deny   ip any 10.19.0.0 0.0.255.255
+ permit ip any any
+ip access-list extended acl-aws
+ permit ip any 0.0.0.0 255.255.255.0
+ deny   ip any any
+ip access-list extended acl-nat
+ deny   ip any 10.19.0.0 0.0.255.255
+ deny   ip any 10.0.0.0 0.255.255.255
+ deny   ip any 172.16.0.0 0.15.255.255
+ deny   ip any 192.168.0.0 0.0.255.255
+ permit ip 10.0.0.0 0.255.255.255 any
+ permit ip 172.16.0.0 0.15.255.255 any
+ permit ip 192.168.0.0 0.0.255.255 any
+ip access-list extended amzn-filter
+ permit ip 10.19.0.0 0.0.255.255 any
+ deny   ip any any
+!
+!
+ip prefix-list UKnetworks_to_dmvpn seq 5 permit 10.150.0.0/24
+ip prefix-list UKnetworks_to_dmvpn seq 10 permit 10.150.1.0/24
+ip prefix-list UKnetworks_to_dmvpn seq 15 permit 10.150.2.0/24
+ip prefix-list UKnetworks_to_dmvpn seq 20 permit 10.150.3.0/24
+ip prefix-list UKnetworks_to_dmvpn seq 25 permit 10.150.4.0/24
+ip prefix-list UKnetworks_to_dmvpn seq 30 permit 10.150.5.0/24
+ip prefix-list UKnetworks_to_dmvpn seq 35 permit 10.150.6.0/24
+ip prefix-list UKnetworks_to_dmvpn seq 40 permit 10.150.7.0/24
+ip prefix-list UKnetworks_to_dmvpn seq 45 permit 10.150.8.0/24
+ip prefix-list UKnetworks_to_dmvpn seq 50 permit 10.150.9.0/24
+ip prefix-list UKnetworks_to_dmvpn seq 55 permit 192.168.150.0/24
+ip prefix-list UKnetworks_to_dmvpn seq 56 permit 192.168.151.0/24
+ip prefix-list UKnetworks_to_dmvpn seq 60 permit 10.20.30.0/24
+ip prefix-list UKnetworks_to_dmvpn seq 65 permit 172.16.50.0/24
+ip prefix-list UKnetworks_to_dmvpn seq 70 permit 172.16.3.160/27
+ip radius source-interface FastEthernet4.150 
+ip sla 100
+ icmp-echo 169.254.20.245 source-interface Tunnel1
+ frequency 5
+ip sla schedule 100 life forever start-time now
+ip sla 200
+ icmp-echo 169.254.23.65 source-interface Tunnel2
+ frequency 5
+ip sla schedule 200 life forever start-time now
+!
+route-map CONNECTED_TO_EIGRP permit 10
+ match ip address prefix-list UKnetworks_to_dmvpn
+!
+snmp-server community wso2 RO
+snmp-server ifindex persist
+access-list 101 deny   ip 192.168.151.0 0.0.0.255 172.16.3.0 0.0.0.255
+access-list 101 deny   ip any 10.0.0.0 0.255.255.255
+access-list 101 deny   ip any 172.16.0.0 0.15.255.255
+access-list 101 deny   ip any 192.168.0.0 0.0.255.255
+access-list 101 permit ip 10.0.0.0 0.255.255.255 any
+access-list 101 permit ip 172.16.0.0 0.15.255.255 any
+access-list 102 permit ip 10.150.0.0 0.0.0.255 172.16.3.0 0.0.0.255
+access-list 102 permit ip 10.150.1.0 0.0.0.255 172.16.3.0 0.0.0.255
+access-list 102 permit ip 10.150.2.0 0.0.0.255 172.16.3.0 0.0.0.255
+access-list 102 permit ip 10.150.3.0 0.0.0.255 172.16.3.0 0.0.0.255
+access-list 102 permit ip 10.150.4.0 0.0.0.255 172.16.3.0 0.0.0.255
+access-list 102 permit ip 10.150.5.0 0.0.0.255 172.16.3.0 0.0.0.255
+access-list 102 permit ip 10.150.6.0 0.0.0.255 172.16.3.0 0.0.0.255
+access-list 102 permit ip 10.150.7.0 0.0.0.255 172.16.3.0 0.0.0.255
+access-list 102 permit ip 10.150.8.0 0.0.0.255 172.16.3.0 0.0.0.255
+access-list 102 permit ip 10.150.9.0 0.0.0.255 172.16.3.0 0.0.0.255
+access-list 102 permit ip 192.168.150.0 0.0.0.255 172.16.3.0 0.0.0.255
+access-list 102 permit ip 192.168.151.0 0.0.0.255 172.16.3.0 0.0.0.255
+access-list 102 permit ip 10.20.30.0 0.0.0.255 172.16.3.0 0.0.0.255
+access-list 102 permit ip 172.16.50.0 0.0.0.255 172.16.3.0 0.0.0.255
+access-list 102 permit ip 203.94.95.0 0.0.0.255 172.16.3.0 0.0.0.255
+access-list 102 permit ip 192.168.0.0 0.0.255.255 172.16.3.0 0.0.0.255
+access-list 112 deny   ip 10.150.0.0 0.0.0.255 172.16.3.0 0.0.0.255
+access-list 112 deny   ip 10.150.1.0 0.0.0.255 172.16.3.0 0.0.0.255
+access-list 112 deny   ip 10.150.2.0 0.0.0.255 172.16.3.0 0.0.0.255
+access-list 112 deny   ip 10.150.3.0 0.0.0.255 172.16.3.0 0.0.0.255
+access-list 112 deny   ip 10.150.4.0 0.0.0.255 172.16.3.0 0.0.0.255
+access-list 112 deny   ip 10.150.5.0 0.0.0.255 172.16.3.0 0.0.0.255
+access-list 112 deny   ip 10.150.6.0 0.0.0.255 172.16.3.0 0.0.0.255
+access-list 112 deny   ip 10.150.7.0 0.0.0.255 172.16.3.0 0.0.0.255
+access-list 112 deny   ip 10.150.8.0 0.0.0.255 172.16.3.0 0.0.0.255
+access-list 112 deny   ip 10.150.9.0 0.0.0.255 172.16.3.0 0.0.0.255
+access-list 112 deny   ip 192.168.150.0 0.0.0.255 172.16.3.0 0.0.0.255
+access-list 112 deny   ip 192.168.151.0 0.0.0.255 172.16.3.0 0.0.0.255
+access-list 112 deny   ip 10.20.30.0 0.0.0.255 172.16.3.0 0.0.0.255
+access-list 112 deny   ip 172.16.50.0 0.0.0.255 172.16.3.0 0.0.0.255
+access-list 112 permit ip any any
+!
+!
+!
+control-plane
+!
+!
+mgcp behavior rsip-range tgcp-only
+mgcp behavior comedia-role none
+mgcp behavior comedia-check-media-src disable
+mgcp behavior comedia-sdp-force disable
+!
+mgcp profile default
+!
+!
+!
+!
+!
+!
+banner motd ^C
+                ************************************************
+                *     ACCESS TO THIS SYSTEM IS PROHIBITED      *
+                *              UNLESS AUTHORISED               *
+                * ACCESSING PROGRAMS AND DATA UNRELATED TO YOU *
+                *    IS PROHIBITED AND IS WRONGFUL UNDER LAW   *
+                ************************************************
+^C
+!
+line con 0
+ exec-timeout 5 0
+ logging synchronous
+ login authentication Console-Access
+ no modem enable
+line aux 0
+line 2
+ no activation-character
+ no exec
+ transport preferred none
+ transport input all
+ stopbits 1
+line vty 0 4
+ exec-timeout 5 0
+ login authentication VTY-Access
+ transport input ssh
+!
+scheduler allocate 20000 1000
+ntp server 192.168.8.88 prefer
+!
+!
+!
+end
+
+--------------------------------------------
+----- Command: show ip interface brief -----
+--------------------------------------------
+
+Interface                  IP-Address      OK? Method Status                Protocol
+FastEthernet0              unassigned      YES unset  up                    up      
+FastEthernet1              unassigned      YES unset  up                    up      
+FastEthernet2              unassigned      YES unset  up                    up      
+FastEthernet3              unassigned      YES unset  administratively down down    
+FastEthernet4              unassigned      YES NVRAM  up                    up      
+FastEthernet4.20           10.150.10.254   YES NVRAM  up                    up      
+FastEthernet4.50           10.150.0.254    YES NVRAM  up                    up      
+FastEthernet4.51           10.150.1.254    YES NVRAM  up                    up      
+FastEthernet4.52           10.150.2.254    YES NVRAM  up                    up      
+FastEthernet4.53           10.150.3.254    YES NVRAM  up                    up      
+FastEthernet4.54           10.150.4.254    YES NVRAM  up                    up      
+FastEthernet4.55           10.150.5.254    YES NVRAM  up                    up      
+FastEthernet4.56           10.150.6.254    YES NVRAM  up                    up      
+FastEthernet4.57           10.150.7.254    YES NVRAM  up                    up      
+FastEthernet4.58           10.150.8.254    YES NVRAM  up                    up      
+FastEthernet4.59           10.150.9.254    YES NVRAM  up                    up      
+FastEthernet4.150          192.168.150.254 YES NVRAM  up                    up      
+FastEthernet4.230          10.20.30.254    YES NVRAM  up                    up      
+FastEthernet4.350          172.16.50.254   YES NVRAM  up                    up      
+FastEthernet4.550          10.10.50.254    YES NVRAM  up                    up      
+NVI0                       10.150.10.254   YES unset  up                    up      
+Tunnel1                    169.254.20.246  YES NVRAM  up                    down    
+Tunnel2                    169.254.23.66   YES NVRAM  up                    down    
+Tunnel20                   10.2.2.3        YES NVRAM  up                    up      
+Vlan1                      unassigned      YES unset  up                    up      
+Vlan2                      unassigned      YES unset  down                  down    
+Vlan151                    192.168.151.254 YES NVRAM  up                    up      
+Vlan350                    unassigned      YES unset  up                    up      
+Vlan999                    91.143.79.154   YES NVRAM  administratively down down    
+Vlan1500                   195.188.181.210 YES NVRAM  up                    up      
+Vlan2824                   80.209.143.14   YES NVRAM  up                    up      
+Wlan-GigabitEthernet0      unassigned      YES unset  up                    up      
+wlan-ap0                   unassigned      YES NVRAM  up                    up      
+-----------------------------------------------
+----- Command: show interface description -----
+-----------------------------------------------
+
+Interface                      Status         Protocol Description
+Fa0                            up             up       
+Fa1                            up             up       
+Fa2                            up             up       
+Fa3                            admin down     down     
+Fa4                            up             up       ## SW-UK-24POE:Gig 1/0/3
+Fa4.20                         up             up       ## WSO2 Infra ##
+Fa4.50                         up             up       ## ENG_01 ##
+Fa4.51                         up             up       ## ENG_02 ##
+Fa4.52                         up             up       ## Admin_Finance ##
+Fa4.53                         up             up       ## Non_Tech ##
+Fa4.54                         up             up       ## Short_Term ##
+Fa4.55                         up             up       ## ENG_03 ##
+Fa4.56                         up             up       ## ENG_04 ##
+Fa4.57                         up             up       ## ENG_05 ##
+Fa4.58                         up             up       ## ENG_06 ##
+Fa4.59                         up             up       ## IOT ##
+Fa4.150                        up             up       ## SERVERS ##
+Fa4.230                        up             up       ## VOIP ##
+Fa4.350                        up             up       ## MANAGEMENT ##
+Fa4.550                        up             up       ## GUEST ##
+NV0                            up             up       
+Tu1                            up             down     
+Tu2                            up             down     
+Tu20                           up             up       DMVPN_10.2.2.0_SPOKE_UK
+Vl1                            up             up       
+Vl2                            down           down     
+Vl151                          up             up       ## SERVERS-BACKUP ##
+Vl350                          up             up       
+Vl999                          admin down     down     
+Vl1500                         up             up       
+Vl2824                         up             up       
+Wl0                            up             up       Internal switch interface connecting to the embedded AP
+wl0                            up             up       Embedded Service module interface to manage the embedded AP
+---------------------------------
+----- Command: show version -----
+---------------------------------
+
+Cisco IOS Software, C800 Software (C800-UNIVERSALK9-M), Version 15.4(3)M4, RELEASE SOFTWARE (fc1)
+Technical Support: http://www.cisco.com/techsupport
+Copyright (c) 1986-2015 by Cisco Systems, Inc.
+Compiled Sun 27-Sep-15 08:36 by prod_rel_team
+
+ROM: System Bootstrap, Version 15.1(4r)M, RELEASE SOFTWARE (fc1)
+
+RO-UK-WAN uptime is 13 weeks, 3 days, 9 hours, 48 minutes
+System returned to ROM by reload at 08:30:13 UTC Thu Jan 16 2020
+System restarted at 08:32:50 UTC Thu Jan 16 2020
+System image file is "flash:/c800-universalk9-mz.SPA.154-3.M4.bin"
+Last reload type: Normal Reload
+Last reload reason: Reload Command
+
+
+
+This product contains cryptographic features and is subject to United
+States and local country laws governing import, export, transfer and
+use. Delivery of Cisco cryptographic products does not imply
+third-party authority to import, export, distribute or use encryption.
+Importers, exporters, distributors and users are responsible for
+compliance with U.S. and local country laws. By using this product you
+agree to comply with applicable laws and regulations. If you are unable
+to comply with U.S. and local laws, return this product immediately.
+
+A summary of U.S. laws governing Cisco cryptographic products may be found at:
+http://www.cisco.com/wwl/export/crypto/tool/stqrg.html
+
+If you require further assistance please contact us by sending email to
+export@cisco.com.
+
+Cisco C881W-E-K9 (revision 1.0) with 363596K/29619K bytes of memory.
+Processor board ID FCZ172992FN
+5 FastEthernet interfaces
+1 Gigabit Ethernet interface
+1 terminal line
+1 Virtual Private Network (VPN) Module
+1 cisco Embedded AP (s)
+DRAM configuration is 32 bits wide
+255K bytes of non-volatile configuration memory.
+250880K bytes of ATA System CompactFlash (Read/Write)
+
+
+License Info:
+
+License UDI:
+
+-------------------------------------------------
+Device#	  PID			SN
+-------------------------------------------------
+*1  	  C881W-E-K9            FCZ172992FN     
+
+
+
+License Information for 'c800'
+    License Level: advipservices   Type: Permanent
+    Next reboot license Level: advipservices
+
+
+Configuration register is 0x2102
+
+---------------------------------------
+----- Command: show cdp neighbors -----
+---------------------------------------
+
+Capability Codes: R - Router, T - Trans Bridge, B - Source Route Bridge
+                  S - Switch, H - Host, I - IGMP, r - Repeater, P - Phone, 
+                  D - Remote, C - CVTA, M - Two-port Mac Relay 
+
+Device ID        Local Intrfce     Holdtme    Capability  Platform  Port ID
+ap               Gig 0             130              T I   AP802GN-E Gig 0
+davidstone_N16DZ_TTB0825647
+                 Fas 0             147            R B S I CISCO1941 Gig 0/1.1
+SW-UK-24POE.wso2.com
+                 Fas 4             162              S I   WS-C2960S Gig 1/0/3
+
+Total cdp entries displayed : 3
+---------------------------------------------
+----- Command: show process cpu history -----
+---------------------------------------------
+
+RO-UK-WAN   06:11:39 PM Sunday Apr 19 2020 UTC
+
+                                                                  
+                                                                  
+                                                                  
+      1111122222     11111                              11111     
+      444446666677777333336666666666555556666655555666660000066666
+  100                                                             
+   90                                                             
+   80                                                             
+   70                                                             
+   60                                                             
+   50                                                             
+   40                                                             
+   30      *****                                                  
+   20      *****                                                  
+   10 ************************************************************
+     0....5....1....1....2....2....3....3....4....4....5....5....6
+               0    5    0    5    0    5    0    5    0    5    0
+               CPU% per second (last 60 seconds)
+
+                                                                  
+                                                                  
+                                                                  
+      1 1 1 1 1 1 1 1 1  1 1 1 1 2 1 1 131 1 1 1 1 1 1 1 1 1 1 1 1
+      080927080809170818917281708570708031818181807181807191918170
+  100                                                             
+   90                                                             
+   80                                                             
+   70                                                             
+   60                                                             
+   50                                                             
+   40                                                             
+   30                            *      *                         
+   20                            *      *                         
+   10 ############################################################
+     0....5....1....1....2....2....3....3....4....4....5....5....6
+               0    5    0    5    0    5    0    5    0    5    0
+               CPU% per minute (last 60 minutes)
+              * = maximum CPU%   # = average CPU%
+
+                                                                              
+                                                                              
+                                                                              
+      211111111121111111191113313111111111111111191113111211211111211111191311
+      572184133542233343992323433332133683341532362220432145422424033333244726
+  100                    *                       *                            
+   90                    *                       *                       *    
+   80                    *                       *                       *    
+   70                    *                       *                       *    
+   60                    *                       *                       *    
+   50                    *                       *                       *    
+   40                    *                       *                       * *  
+   30 *                  *   ** *                *   *                   * *  
+   20 **  *    **       **   ** *      **    *   *   *   * **     *      * * *
+   10 ########################################################################
+     0....5....1....1....2....2....3....3....4....4....5....5....6....6....7..
+               0    5    0    5    0    5    0    5    0    5    0    5    0  
+                   CPU% per hour (last 72 hours)
+                  * = maximum CPU%   # = average CPU%
+
+
+-------------------------------
+----- Command: show clock -----
+-------------------------------
+
+18:11:40.954 UTC Sun Apr 19 2020
+-----------------------------
+----- Command: show run -----
+-----------------------------
+
+Building configuration...
+
+Current configuration : 31466 bytes
+!
+! Last configuration change at 10:05:40 UTC Thu Mar 12 2020 by mitsupport
+! NVRAM config last updated at 07:37:55 UTC Wed Jan 29 2020 by mitsupport
+!
+version 15.4
+service timestamps debug datetime msec
+service timestamps log datetime msec
+service password-encryption
+!
+hostname RO-UK-WAN
+!
+boot-start-marker
+boot system flash:/c800-universalk9-mz.SPA.154-3.M4.bin
+boot-end-marker
+!
+!
+enable secret 5 $1$vQV6$MeGFC7Hjn5mgCRhlKATWU0
+!
+aaa new-model
+!
+!
+aaa group server radius VPN
+ server-private 192.168.150.7 auth-port 1812 key 7 044D1B081C244F1F5B4A
+ server-private 192.168.151.7 auth-port 1812 key 7 105819171612115A5E57
+ ip radius source-interface FastEthernet4.150
+!
+aaa authentication login default local
+aaa authentication login Console-Access local-case
+aaa authentication login VTY-Access local-case
+aaa authentication login userauthen local
+aaa authentication login VPN_Client group VPN
+aaa authentication login VPNUSERSAUTH local
+aaa authorization exec default local if-authenticated 
+aaa authorization network groupauthor local 
+aaa authorization network VPN_Client group VPN 
+aaa authorization network VPNUSERS local 
+!
+!
+!
+!
+!
+aaa session-id common
+service-module wlan-ap 0 bootimage autonomous
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+
+
+!
+!
+!
+!
+ip flow-egress input-interface
+ip flow-cache timeout active 1
+no ip domain lookup
+ip domain name wso2.com
+ip cef
+no ipv6 cef
+!
+!
+!
+!
+!
+multilink bundle-name authenticated
+!
+!
+!
+!
+!
+!
+!
+!
+cts logging verbose
+license udi pid C881W-E-K9 sn FCZ172992FN
+!
+!
+vtp mode transparent
+username wso2 privilege 15 secret 5 $1$7R0r$3qDzHBNy9cTA3X1Roy5mx1
+username mitsupport privilege 15 secret 5 $1$9RrB$vKL5X8ladHxsHxAY8xSB7/
+username wso2-remoteuser privilege 0 secret 5 $1$rtgq$ITL0mOCFjEwnX1k.qv4SG/
+username Janaka privilege 0 password 7 063C021B40774D033F1E3D2F430F7F11290E3F1B6109211E
+username Saneth privilege 0 password 7 063C280B0F42301306473F44063130063E09290C38225455
+username Samith privilege 0 password 7 081803540A012B1D510858290D0E770514132F332A320B08
+username Firzhan privilege 0 password 7 107703370D2E1F4F355707210D7D770F15350B2C37216453
+username Pandula privilege 0 password 7 143A08214F09051C1D7B1D15383E1D2C0E3B5F7742176603
+username Madawa privilege 0 password 7 05261C4B0B45631312460E3D2C3E09070F010860182F3A10
+username sithumini privilege 0 password 7 115E5F5C10335C2B430E1301397D6C1F48243356170E0149
+username lakindu secret 5 $1$jFcy$QM0jWorTB7fQAj6cRpnvn0
+!
+!
+!
+!
+!
+vlan 151 
+!
+vlan 350
+ name Mgmt.
+!
+vlan 999 
+!
+vlan 1500
+ name New-ISP
+!
+vlan 2824
+ name ISP-LINK
+!
+track 100 ip sla 100 reachability
+!
+track 200 ip sla 200 reachability
+!
+!
+policy-map SHAPE_100
+ class class-default
+  shape average 100000000
+!
+! 
+crypto keyring keyring-vpn-93a4d8d8-0  
+  local-address 80.209.143.14
+  pre-shared-key address 34.246.119.20 key Hs733bcb3i6sd
+crypto keyring keyring-vpn-93a4d8d8-1  
+  local-address 80.209.143.14
+  pre-shared-key address 52.18.253.172 key Hs733bcb3i6sd
+!
+crypto isakmp policy 3
+ encr 3des
+ authentication pre-share
+ group 2
+!
+crypto isakmp policy 10
+ encr aes
+ authentication pre-share
+ group 2
+!
+crypto isakmp policy 11
+ encr 3des
+ authentication pre-share
+ group 2
+!
+crypto isakmp policy 20
+ encr 3des
+ hash md5
+ authentication pre-share
+ group 2
+!
+crypto isakmp policy 200
+ encr aes
+ authentication pre-share
+ group 2
+ lifetime 28800
+!
+crypto isakmp policy 201
+ encr aes
+ authentication pre-share
+ group 2
+ lifetime 28800
+crypto isakmp key Hs733bcb3i6sd address 34.246.119.20  
+crypto isakmp key Hs733bcb3i6sd address 52.18.253.172  
+crypto isakmp key wso2_DMVPN# address 0.0.0.0        
+crypto isakmp keepalive 15
+!
+crypto isakmp client configuration group vpnclient
+ key cisco123
+ dns 8.8.8.8
+ domain wso2.com
+ pool ippool
+ acl 102
+!
+crypto isakmp client configuration group vpnclient_rad
+ key cisco123
+ dns 8.8.8.8
+ domain wso2.com
+ pool ippool
+ acl 102
+ save-password
+crypto isakmp profile vpnclient.cisco.com
+   match identity group vpnclient_rad
+   client authentication list VPN_Client
+   isakmp authorization list VPN_Client
+   client configuration address respond
+crypto isakmp profile isakmp-vpn-93a4d8d8-0
+   keyring keyring-vpn-93a4d8d8-0
+   match identity address 34.246.119.20 255.255.255.255 
+   local-address 80.209.143.14
+crypto isakmp profile isakmp-vpn-93a4d8d8-1
+   keyring keyring-vpn-93a4d8d8-1
+   match identity address 52.18.253.172 255.255.255.255 
+   local-address 80.209.143.14
+!
+crypto ipsec security-association replay window-size 128
+!
+crypto ipsec transform-set ESP-3DES-SHA-Transport esp-3des esp-sha-hmac 
+ mode transport
+crypto ipsec transform-set ESP-AES-128-SHA esp-aes esp-sha-hmac 
+ mode tunnel
+crypto ipsec transform-set myset esp-3des esp-md5-hmac 
+ mode tunnel
+crypto ipsec transform-set TRANS-DES esp-des esp-md5-hmac 
+ mode tunnel
+crypto ipsec transform-set transform-amzn esp-aes esp-sha-hmac 
+ mode tunnel
+crypto ipsec transform-set ipsec-prop-vpn-93a4d8d8-0 esp-aes esp-sha-hmac 
+ mode tunnel
+crypto ipsec transform-set ipsec-prop-vpn-93a4d8d8-1 esp-aes esp-sha-hmac 
+ mode tunnel
+crypto ipsec df-bit clear
+!
+crypto ipsec profile Profile-DMVPN
+ set transform-set ESP-3DES-SHA-Transport 
+!
+!
+crypto ipsec profile ipsec-vpn-93a4d8d8-0
+ set transform-set ipsec-prop-vpn-93a4d8d8-0 
+ set pfs group2
+!
+crypto ipsec profile ipsec-vpn-93a4d8d8-1
+ set transform-set ipsec-prop-vpn-93a4d8d8-1 
+ set pfs group2
+!
+!
+crypto dynamic-map DYN-MAP 11
+ set security-association lifetime seconds 28800
+ set transform-set TRANS-DES 
+ set isakmp-profile vpnclient.cisco.com
+ reverse-route
+!
+crypto dynamic-map dynmap 10
+ set security-association lifetime seconds 28800
+ set transform-set myset 
+ reverse-route
+!
+!
+crypto map VPN local-address Vlan2824
+crypto map VPN 11 ipsec-isakmp dynamic DYN-MAP 
+!
+crypto map clientmap client authentication list VPNUSERSAUTH
+crypto map clientmap isakmp authorization list VPNUSERS
+crypto map clientmap client configuration address respond
+crypto map clientmap 3 ipsec-isakmp 
+ description Tunnel-to-AWS-VPN
+ set peer 34.246.119.20
+ set peer 52.18.253.172
+ set ip access-group amzn-filter in
+ set transform-set transform-amzn 
+ set pfs group2
+ match address acl-amzn
+crypto map clientmap 10 ipsec-isakmp dynamic dynmap 
+!
+!
+!
+!
+!
+!
+interface Tunnel1
+ ip address 169.254.20.246 255.255.255.252
+ ip virtual-reassembly in
+ ip tcp adjust-mss 1379
+ tunnel source 80.209.143.14
+ tunnel mode ipsec ipv4
+ tunnel destination 34.246.119.20
+ tunnel protection ipsec profile ipsec-vpn-93a4d8d8-0
+!
+interface Tunnel2
+ ip address 169.254.23.66 255.255.255.252
+ ip virtual-reassembly in
+ ip tcp adjust-mss 1379
+ tunnel source 80.209.143.14
+ tunnel mode ipsec ipv4
+ tunnel destination 52.18.253.172
+ tunnel protection ipsec profile ipsec-vpn-93a4d8d8-1
+!
+interface Tunnel20
+ description DMVPN_10.2.2.0_SPOKE_UK
+ bandwidth 102400
+ ip address 10.2.2.3 255.255.255.0
+ no ip redirects
+ ip mtu 1400
+ ip nhrp authentication cisco20
+ ip nhrp map multicast dynamic
+ ip nhrp map multicast 203.94.95.100
+ ip nhrp map 10.2.2.1 203.94.95.100
+ ip nhrp network-id 12345
+ ip nhrp holdtime 600
+ ip nhrp nhs 10.2.2.1
+ ip nhrp shortcut
+ tunnel source Vlan1500
+ tunnel mode gre multipoint
+ tunnel key 10000
+ tunnel protection ipsec profile Profile-DMVPN
+!
+interface FastEthernet0
+ switchport trunk native vlan 2824
+ switchport mode trunk
+ no ip address
+!
+interface FastEthernet1
+ switchport access vlan 151
+ no ip address
+!
+interface FastEthernet2
+ switchport trunk native vlan 1500
+ switchport mode trunk
+ no ip address
+!
+interface FastEthernet3
+ no ip address
+ shutdown
+!
+interface FastEthernet4
+ description ## SW-UK-24POE:Gig 1/0/3
+ no ip address
+ no ip route-cache
+ duplex auto
+ speed auto
+!
+interface FastEthernet4.20
+ description ## WSO2 Infra ##
+ encapsulation dot1Q 20
+ ip address 10.150.10.254 255.255.255.0
+ ip helper-address 192.168.150.5
+ ip helper-address 192.168.128.5
+ ip helper-address 192.168.151.5
+ ip flow ingress
+ ip flow egress
+ ip nat inside
+ ip virtual-reassembly in
+ no ip route-cache
+!
+interface FastEthernet4.50
+ description ## ENG_01 ##
+ encapsulation dot1Q 50
+ ip address 10.150.0.254 255.255.255.0
+ ip helper-address 192.168.150.5
+ ip helper-address 192.168.128.5
+ ip helper-address 192.168.151.5
+ ip flow ingress
+ ip flow egress
+ ip nat inside
+ ip virtual-reassembly in
+ no ip route-cache
+!
+interface FastEthernet4.51
+ description ## ENG_02 ##
+ encapsulation dot1Q 51
+ ip address 10.150.1.254 255.255.255.0
+ ip helper-address 192.168.150.5
+ ip helper-address 192.168.128.5
+ ip helper-address 192.168.151.5
+ ip flow ingress
+ ip flow egress
+ ip nat inside
+ ip virtual-reassembly in
+ no ip route-cache
+!
+interface FastEthernet4.52
+ description ## Admin_Finance ##
+ encapsulation dot1Q 52
+ ip address 10.150.2.254 255.255.255.0
+ ip helper-address 192.168.150.5
+ ip helper-address 192.168.128.5
+ ip helper-address 192.168.151.5
+ ip flow ingress
+ ip flow egress
+ ip nat inside
+ ip virtual-reassembly in
+ no ip route-cache
+!
+interface FastEthernet4.53
+ description ## Non_Tech ##
+ encapsulation dot1Q 53
+ ip address 10.150.3.254 255.255.255.0
+ ip helper-address 192.168.150.5
+ ip helper-address 192.168.128.5
+ ip helper-address 192.168.151.5
+ ip flow ingress
+ ip flow egress
+ ip nat inside
+ ip virtual-reassembly in
+ no ip route-cache
+!
+interface FastEthernet4.54
+ description ## Short_Term ##
+ encapsulation dot1Q 54
+ ip address 10.150.4.254 255.255.255.0
+ ip helper-address 192.168.150.5
+ ip helper-address 192.168.128.5
+ ip helper-address 192.168.151.5
+ ip flow ingress
+ ip flow egress
+ ip nat inside
+ ip virtual-reassembly in
+ no ip route-cache
+!
+interface FastEthernet4.55
+ description ## ENG_03 ##
+ encapsulation dot1Q 55
+ ip address 10.150.5.254 255.255.255.0
+ ip helper-address 192.168.150.5
+ ip helper-address 192.168.128.5
+ ip helper-address 192.168.151.5
+ ip flow ingress
+ ip flow egress
+ ip nat inside
+ ip virtual-reassembly in
+ no ip route-cache
+!
+interface FastEthernet4.56
+ description ## ENG_04 ##
+ encapsulation dot1Q 56
+ ip address 10.150.6.254 255.255.255.0
+ ip helper-address 192.168.150.5
+ ip helper-address 192.168.128.5
+ ip helper-address 192.168.151.5
+ ip flow ingress
+ ip flow egress
+ ip nat inside
+ ip virtual-reassembly in
+ no ip route-cache
+!
+interface FastEthernet4.57
+ description ## ENG_05 ##
+ encapsulation dot1Q 57
+ ip address 10.150.7.254 255.255.255.0
+ ip helper-address 192.168.150.5
+ ip helper-address 192.168.128.5
+ ip helper-address 192.168.151.5
+ ip flow ingress
+ ip flow egress
+ ip nat inside
+ ip virtual-reassembly in
+ no ip route-cache
+!
+interface FastEthernet4.58
+ description ## ENG_06 ##
+ encapsulation dot1Q 58
+ ip address 10.150.8.254 255.255.255.0
+ ip helper-address 192.168.150.5
+ ip helper-address 192.168.128.5
+ ip helper-address 192.168.151.5
+ ip flow ingress
+ ip flow egress
+ ip nat inside
+ ip virtual-reassembly in
+ no ip route-cache
+!
+interface FastEthernet4.59
+ description ## IOT ##
+ encapsulation dot1Q 59
+ ip address 10.150.9.254 255.255.255.0
+ ip helper-address 192.168.150.5
+ ip helper-address 192.168.128.5
+ ip helper-address 192.168.151.5
+ ip flow ingress
+ ip flow egress
+ ip nat inside
+ ip virtual-reassembly in
+ no ip route-cache
+!
+interface FastEthernet4.150
+ description ## SERVERS ##
+ encapsulation dot1Q 150
+ ip address 192.168.150.254 255.255.255.0
+ ip helper-address 192.168.150.5
+ ip flow ingress
+ ip flow egress
+ ip nat inside
+ ip virtual-reassembly in
+ no ip route-cache
+!
+interface FastEthernet4.230
+ description ## VOIP ##
+ encapsulation dot1Q 230
+ ip address 10.20.30.254 255.255.255.0
+ ip flow ingress
+ ip flow egress
+ ip nat inside
+ ip virtual-reassembly in
+ no ip route-cache
+!
+interface FastEthernet4.350
+ description ## MANAGEMENT ##
+ encapsulation dot1Q 350
+ ip address 172.16.50.254 255.255.255.0
+ ip flow ingress
+ ip flow egress
+ no ip route-cache
+!
+interface FastEthernet4.550
+ description ## GUEST ##
+ encapsulation dot1Q 550
+ ip address 10.10.50.254 255.255.255.0
+ ip helper-address 192.168.150.5
+ ip helper-address 192.168.128.5
+ ip helper-address 192.168.151.5
+ ip flow ingress
+ ip flow egress
+ ip nat inside
+ ip virtual-reassembly in
+ no ip route-cache
+!
+interface Wlan-GigabitEthernet0
+ description Internal switch interface connecting to the embedded AP
+ no ip address
+!
+interface wlan-ap0
+ description Embedded Service module interface to manage the embedded AP
+ no ip address
+!
+interface Vlan1
+ no ip address
+!
+interface Vlan2
+ no ip address
+!
+interface Vlan151
+ description ## SERVERS-BACKUP ##
+ ip address 192.168.151.254 255.255.255.0
+ ip flow ingress
+ ip flow egress
+ ip nat inside
+ ip virtual-reassembly in
+!
+interface Vlan350
+ no ip address
+!
+interface Vlan999
+ ip address 91.143.79.154 255.255.255.224
+ ip flow ingress
+ ip flow egress
+ ip virtual-reassembly in
+ shutdown
+!
+interface Vlan1500
+ ip address 195.188.181.210 255.255.255.248
+ ip flow ingress
+ ip flow egress
+ ip nat outside
+ ip virtual-reassembly in
+ crypto map clientmap
+!
+interface Vlan2824
+ ip address 80.209.143.14 255.255.255.252
+ ip flow ingress
+ ip flow egress
+ ip virtual-reassembly in
+ crypto map clientmap
+!
+!
+router eigrp 100
+ network 10.2.2.0 0.0.0.255
+ redistribute connected route-map CONNECTED_TO_EIGRP
+!
+ip local pool ippool 172.16.3.161 172.16.3.190
+ip forward-protocol nd
+no ip http server
+no ip http secure-server
+!
+ip flow-export version 9
+ip flow-export destination 192.168.150.20 9996
+ip flow-export destination 192.168.100.26 99
+!
+ip nat pool public_ip_1 91.143.79.154 91.143.79.154 prefix-length 27
+ip nat pool public_ip_3 195.188.181.210 195.188.181.210 prefix-length 29
+ip nat pool public_ip_2 80.209.143.14 80.209.143.14 prefix-length 30
+ip nat inside source list acl-nat interface Vlan1500 overload
+ip route 10.19.0.0 255.255.0.0 Tunnel1 track 100
+ip route 10.19.0.0 255.255.0.0 Tunnel2 track 200
+ip route 0.0.0.0 0.0.0.0 195.188.181.209
+ip route 34.246.119.20 255.255.255.255 80.209.143.13
+ip route 52.18.253.172 255.255.255.255 80.209.143.13
+ip ssh time-out 60
+ip ssh authentication-retries 2
+ip ssh version 2
+!
+ip access-list extended Device-Mgmt
+ permit ip 172.16.2.0 0.0.0.255 any
+ permit ip 10.100.10.0 0.0.0.255 any
+ permit ip 203.94.95.0 0.0.0.255 any
+ip access-list extended WSO2_UK_SL_Networks
+ permit ip 10.150.0.0 0.0.255.255 10.100.32.0 0.0.0.255
+ permit ip 10.150.0.0 0.0.255.255 192.168.0.0 0.0.0.255
+ permit ip 10.150.0.0 0.0.255.255 192.168.1.0 0.0.0.255
+ permit ip 10.150.0.0 0.0.255.255 10.100.0.0 0.0.0.255
+ permit ip 10.150.0.0 0.0.255.255 10.100.1.0 0.0.0.255
+ permit ip 10.150.0.0 0.0.255.255 10.100.2.0 0.0.0.255
+ permit ip 10.150.0.0 0.0.255.255 10.100.3.0 0.0.0.255
+ permit ip 10.150.0.0 0.0.255.255 10.100.4.0 0.0.0.255
+ permit ip 10.150.0.0 0.0.255.255 10.100.5.0 0.0.0.255
+ permit ip 10.150.0.0 0.0.255.255 192.168.16.0 0.0.3.255
+ permit ip 10.150.0.0 0.0.255.255 192.168.32.0 0.0.0.255
+ permit ip 10.150.0.0 0.0.255.255 192.168.3.0 0.0.0.255
+ permit ip 10.150.0.0 0.0.255.255 172.26.0.0 0.0.0.255
+ permit ip 10.150.0.0 0.0.255.255 172.25.0.0 0.0.0.255
+ permit ip 10.150.0.0 0.0.255.255 192.168.2.0 0.0.0.255
+ permit ip 10.150.0.0 0.0.255.255 172.16.2.0 0.0.0.255
+ permit ip 10.150.0.0 0.0.255.255 10.20.1.0 0.0.0.255
+ permit ip 10.150.0.0 0.0.255.255 10.20.2.0 0.0.0.255
+ permit ip 10.150.0.0 0.0.255.255 10.20.10.0 0.0.0.255
+ permit ip 10.150.0.0 0.0.255.255 10.40.0.0 0.0.0.255
+ permit ip 10.150.0.0 0.0.255.255 192.168.4.0 0.0.3.255
+ permit ip 10.150.0.0 0.0.255.255 10.100.6.0 0.0.0.255
+ permit ip 10.150.0.0 0.0.255.255 10.100.7.0 0.0.0.255
+ permit ip 10.150.0.0 0.0.255.255 10.100.8.0 0.0.0.255
+ permit ip 10.150.0.0 0.0.255.255 10.100.9.0 0.0.0.255
+ permit ip 10.150.0.0 0.0.255.255 192.168.8.0 0.0.0.255
+ permit ip 10.150.0.0 0.0.255.255 192.168.48.0 0.0.3.255
+ permit ip 10.150.0.0 0.0.255.255 192.168.52.0 0.0.3.255
+ permit ip 10.150.0.0 0.0.255.255 192.168.56.0 0.0.0.255
+ permit ip 10.150.0.0 0.0.255.255 192.168.57.0 0.0.0.255
+ permit ip 10.150.0.0 0.0.255.255 192.168.58.0 0.0.0.255
+ permit ip 10.150.0.0 0.0.255.255 192.168.59.0 0.0.0.255
+ permit ip 10.150.0.0 0.0.255.255 192.168.60.0 0.0.0.255
+ permit ip 10.20.30.0 0.0.0.255 10.100.32.0 0.0.0.255
+ permit ip 10.20.30.0 0.0.0.255 192.168.0.0 0.0.0.255
+ permit ip 10.20.30.0 0.0.0.255 192.168.1.0 0.0.0.255
+ permit ip 10.20.30.0 0.0.0.255 10.100.0.0 0.0.0.255
+ permit ip 10.20.30.0 0.0.0.255 10.100.1.0 0.0.0.255
+ permit ip 10.20.30.0 0.0.0.255 10.100.2.0 0.0.0.255
+ permit ip 10.20.30.0 0.0.0.255 10.100.3.0 0.0.0.255
+ permit ip 10.20.30.0 0.0.0.255 10.100.4.0 0.0.0.255
+ permit ip 10.20.30.0 0.0.0.255 10.100.5.0 0.0.0.255
+ permit ip 10.20.30.0 0.0.0.255 192.168.16.0 0.0.3.255
+ permit ip 10.20.30.0 0.0.0.255 192.168.32.0 0.0.0.255
+ permit ip 10.20.30.0 0.0.0.255 192.168.3.0 0.0.0.255
+ permit ip 10.20.30.0 0.0.0.255 172.26.0.0 0.0.0.255
+ permit ip 10.20.30.0 0.0.0.255 172.25.0.0 0.0.0.255
+ permit ip 10.20.30.0 0.0.0.255 192.168.2.0 0.0.0.255
+ permit ip 10.20.30.0 0.0.0.255 172.16.2.0 0.0.0.255
+ permit ip 10.20.30.0 0.0.0.255 10.20.1.0 0.0.0.255
+ permit ip 10.20.30.0 0.0.0.255 10.20.2.0 0.0.0.255
+ permit ip 10.20.30.0 0.0.0.255 10.20.10.0 0.0.0.255
+ permit ip 10.20.30.0 0.0.0.255 10.40.0.0 0.0.0.255
+ permit ip 10.20.30.0 0.0.0.255 192.168.4.0 0.0.3.255
+ permit ip 10.20.30.0 0.0.0.255 10.100.6.0 0.0.0.255
+ permit ip 10.20.30.0 0.0.0.255 10.100.7.0 0.0.0.255
+ permit ip 10.20.30.0 0.0.0.255 10.100.8.0 0.0.0.255
+ permit ip 10.20.30.0 0.0.0.255 10.100.9.0 0.0.0.255
+ permit ip 10.20.30.0 0.0.0.255 192.168.8.0 0.0.0.255
+ permit ip 10.20.30.0 0.0.0.255 192.168.48.0 0.0.3.255
+ permit ip 10.20.30.0 0.0.0.255 192.168.52.0 0.0.3.255
+ permit ip 10.20.30.0 0.0.0.255 192.168.56.0 0.0.0.255
+ permit ip 10.20.30.0 0.0.0.255 192.168.57.0 0.0.0.255
+ permit ip 10.20.30.0 0.0.0.255 192.168.58.0 0.0.0.255
+ permit ip 10.20.30.0 0.0.0.255 192.168.59.0 0.0.0.255
+ permit ip 10.20.30.0 0.0.0.255 192.168.60.0 0.0.0.255
+ permit ip 192.168.150.0 0.0.0.255 10.100.32.0 0.0.0.255
+ permit ip 192.168.150.0 0.0.0.255 192.168.0.0 0.0.0.255
+ permit ip 192.168.150.0 0.0.0.255 192.168.1.0 0.0.0.255
+ permit ip 192.168.150.0 0.0.0.255 10.100.0.0 0.0.0.255
+ permit ip 192.168.150.0 0.0.0.255 10.100.1.0 0.0.0.255
+ permit ip 192.168.150.0 0.0.0.255 10.100.2.0 0.0.0.255
+ permit ip 192.168.150.0 0.0.0.255 10.100.3.0 0.0.0.255
+ permit ip 192.168.150.0 0.0.0.255 10.100.4.0 0.0.0.255
+ permit ip 192.168.150.0 0.0.0.255 10.100.5.0 0.0.0.255
+ permit ip 192.168.150.0 0.0.0.255 192.168.16.0 0.0.3.255
+ permit ip 192.168.150.0 0.0.0.255 192.168.32.0 0.0.0.255
+ permit ip 192.168.150.0 0.0.0.255 192.168.3.0 0.0.0.255
+ permit ip 192.168.150.0 0.0.0.255 172.26.0.0 0.0.0.255
+ permit ip 192.168.150.0 0.0.0.255 172.25.0.0 0.0.0.255
+ permit ip 192.168.150.0 0.0.0.255 192.168.2.0 0.0.0.255
+ permit ip 192.168.150.0 0.0.0.255 172.16.2.0 0.0.0.255
+ permit ip 192.168.150.0 0.0.0.255 10.20.1.0 0.0.0.255
+ permit ip 192.168.150.0 0.0.0.255 10.20.2.0 0.0.0.255
+ permit ip 192.168.150.0 0.0.0.255 10.20.10.0 0.0.0.255
+ permit ip 192.168.150.0 0.0.0.255 10.40.0.0 0.0.0.255
+ permit ip 192.168.150.0 0.0.0.255 192.168.4.0 0.0.3.255
+ permit ip 192.168.150.0 0.0.0.255 10.100.6.0 0.0.0.255
+ permit ip 192.168.150.0 0.0.0.255 10.100.7.0 0.0.0.255
+ permit ip 192.168.150.0 0.0.0.255 10.100.8.0 0.0.0.255
+ permit ip 192.168.150.0 0.0.0.255 10.100.9.0 0.0.0.255
+ permit ip 192.168.150.0 0.0.0.255 192.168.8.0 0.0.0.255
+ permit ip 192.168.150.0 0.0.0.255 192.168.48.0 0.0.3.255
+ permit ip 192.168.150.0 0.0.0.255 192.168.52.0 0.0.3.255
+ permit ip 192.168.150.0 0.0.0.255 192.168.56.0 0.0.0.255
+ permit ip 192.168.150.0 0.0.0.255 192.168.57.0 0.0.0.255
+ permit ip 192.168.150.0 0.0.0.255 192.168.58.0 0.0.0.255
+ permit ip 192.168.150.0 0.0.0.255 192.168.59.0 0.0.0.255
+ permit ip 192.168.150.0 0.0.0.255 192.168.60.0 0.0.0.255
+ permit ip 172.16.50.0 0.0.0.255 10.100.32.0 0.0.0.255
+ permit ip 172.16.50.0 0.0.0.255 192.168.0.0 0.0.0.255
+ permit ip 172.16.50.0 0.0.0.255 192.168.1.0 0.0.0.255
+ permit ip 172.16.50.0 0.0.0.255 10.100.0.0 0.0.0.255
+ permit ip 172.16.50.0 0.0.0.255 10.100.1.0 0.0.0.255
+ permit ip 172.16.50.0 0.0.0.255 10.100.2.0 0.0.0.255
+ permit ip 172.16.50.0 0.0.0.255 10.100.3.0 0.0.0.255
+ permit ip 172.16.50.0 0.0.0.255 10.100.4.0 0.0.0.255
+ permit ip 172.16.50.0 0.0.0.255 10.100.5.0 0.0.0.255
+ permit ip 172.16.50.0 0.0.0.255 192.168.16.0 0.0.3.255
+ permit ip 172.16.50.0 0.0.0.255 192.168.32.0 0.0.0.255
+ permit ip 172.16.50.0 0.0.0.255 192.168.3.0 0.0.0.255
+ permit ip 172.16.50.0 0.0.0.255 172.26.0.0 0.0.0.255
+ permit ip 172.16.50.0 0.0.0.255 172.25.0.0 0.0.0.255
+ permit ip 172.16.50.0 0.0.0.255 192.168.2.0 0.0.0.255
+ permit ip 172.16.50.0 0.0.0.255 172.16.2.0 0.0.0.255
+ permit ip 172.16.50.0 0.0.0.255 10.20.1.0 0.0.0.255
+ permit ip 172.16.50.0 0.0.0.255 10.20.2.0 0.0.0.255
+ permit ip 172.16.50.0 0.0.0.255 10.20.10.0 0.0.0.255
+ permit ip 172.16.50.0 0.0.0.255 192.168.4.0 0.0.3.255
+ permit ip 172.16.50.0 0.0.0.255 10.100.6.0 0.0.0.255
+ permit ip 172.16.50.0 0.0.0.255 10.100.7.0 0.0.0.255
+ permit ip 172.16.50.0 0.0.0.255 10.100.8.0 0.0.0.255
+ permit ip 172.16.50.0 0.0.0.255 10.100.9.0 0.0.0.255
+ permit ip 172.16.50.0 0.0.0.255 192.168.8.0 0.0.0.255
+ permit ip 172.16.50.0 0.0.0.255 192.168.48.0 0.0.3.255
+ permit ip 172.16.50.0 0.0.0.255 192.168.52.0 0.0.3.255
+ permit ip 172.16.50.0 0.0.0.255 192.168.56.0 0.0.0.255
+ permit ip 172.16.50.0 0.0.0.255 192.168.57.0 0.0.0.255
+ permit ip 172.16.50.0 0.0.0.255 192.168.58.0 0.0.0.255
+ permit ip 172.16.50.0 0.0.0.255 192.168.59.0 0.0.0.255
+ permit ip 172.16.50.0 0.0.0.255 192.168.60.0 0.0.0.255
+ permit ip 192.168.151.0 0.0.0.255 10.100.32.0 0.0.0.255
+ permit ip 192.168.151.0 0.0.0.255 192.168.0.0 0.0.0.255
+ permit ip 192.168.151.0 0.0.0.255 192.168.1.0 0.0.0.255
+ permit ip 192.168.151.0 0.0.0.255 10.100.0.0 0.0.0.255
+ permit ip 192.168.151.0 0.0.0.255 10.100.1.0 0.0.0.255
+ permit ip 192.168.151.0 0.0.0.255 10.100.2.0 0.0.0.255
+ permit ip 192.168.151.0 0.0.0.255 10.100.3.0 0.0.0.255
+ permit ip 192.168.151.0 0.0.0.255 10.100.4.0 0.0.0.255
+ permit ip 192.168.151.0 0.0.0.255 10.100.5.0 0.0.0.255
+ permit ip 192.168.151.0 0.0.0.255 192.168.16.0 0.0.3.255
+ permit ip 192.168.151.0 0.0.0.255 192.168.32.0 0.0.0.255
+ permit ip 192.168.151.0 0.0.0.255 192.168.3.0 0.0.0.255
+ permit ip 192.168.151.0 0.0.0.255 172.26.0.0 0.0.0.255
+ permit ip 192.168.151.0 0.0.0.255 172.25.0.0 0.0.0.255
+ permit ip 192.168.151.0 0.0.0.255 192.168.2.0 0.0.0.255
+ permit ip 192.168.151.0 0.0.0.255 172.16.2.0 0.0.0.255
+ permit ip 192.168.151.0 0.0.0.255 10.20.1.0 0.0.0.255
+ permit ip 192.168.151.0 0.0.0.255 10.20.2.0 0.0.0.255
+ permit ip 192.168.151.0 0.0.0.255 10.20.10.0 0.0.0.255
+ permit ip 192.168.151.0 0.0.0.255 10.40.0.0 0.0.0.255
+ permit ip 192.168.151.0 0.0.0.255 192.168.4.0 0.0.3.255
+ permit ip 192.168.151.0 0.0.0.255 10.100.6.0 0.0.0.255
+ permit ip 192.168.151.0 0.0.0.255 10.100.7.0 0.0.0.255
+ permit ip 192.168.151.0 0.0.0.255 10.100.8.0 0.0.0.255
+ permit ip 192.168.151.0 0.0.0.255 10.100.9.0 0.0.0.255
+ permit ip 192.168.151.0 0.0.0.255 192.168.8.0 0.0.0.255
+ permit ip 192.168.151.0 0.0.0.255 192.168.48.0 0.0.3.255
+ permit ip 192.168.151.0 0.0.0.255 192.168.52.0 0.0.3.255
+ permit ip 192.168.151.0 0.0.0.255 192.168.56.0 0.0.0.255
+ permit ip 192.168.151.0 0.0.0.255 192.168.57.0 0.0.0.255
+ permit ip 192.168.151.0 0.0.0.255 192.168.58.0 0.0.0.255
+ permit ip 192.168.151.0 0.0.0.255 192.168.59.0 0.0.0.255
+ permit ip 192.168.151.0 0.0.0.255 192.168.60.0 0.0.0.255
+ permit ip 10.10.50.0 0.0.0.255 10.100.32.0 0.0.0.255
+ permit ip 10.10.50.0 0.0.0.255 192.168.0.0 0.0.0.255
+ permit ip 10.10.50.0 0.0.0.255 192.168.1.0 0.0.0.255
+ permit ip 10.10.50.0 0.0.0.255 10.100.0.0 0.0.0.255
+ permit ip 10.10.50.0 0.0.0.255 10.100.1.0 0.0.0.255
+ permit ip 10.10.50.0 0.0.0.255 10.100.2.0 0.0.0.255
+ permit ip 10.10.50.0 0.0.0.255 10.100.3.0 0.0.0.255
+ permit ip 10.10.50.0 0.0.0.255 10.100.4.0 0.0.0.255
+ permit ip 10.10.50.0 0.0.0.255 10.100.5.0 0.0.0.255
+ permit ip 10.10.50.0 0.0.0.255 192.168.16.0 0.0.3.255
+ permit ip 10.10.50.0 0.0.0.255 192.168.32.0 0.0.0.255
+ permit ip 10.10.50.0 0.0.0.255 192.168.3.0 0.0.0.255
+ permit ip 10.10.50.0 0.0.0.255 172.26.0.0 0.0.0.255
+ permit ip 10.10.50.0 0.0.0.255 172.25.0.0 0.0.0.255
+ permit ip 10.10.50.0 0.0.0.255 192.168.2.0 0.0.0.255
+ permit ip 10.10.50.0 0.0.0.255 172.16.2.0 0.0.0.255
+ permit ip 10.10.50.0 0.0.0.255 10.20.1.0 0.0.0.255
+ permit ip 10.10.50.0 0.0.0.255 10.20.2.0 0.0.0.255
+ permit ip 10.10.50.0 0.0.0.255 10.20.10.0 0.0.0.255
+ permit ip 10.10.50.0 0.0.0.255 10.40.0.0 0.0.0.255
+ permit ip 10.10.50.0 0.0.0.255 192.168.4.0 0.0.3.255
+ permit ip 10.10.50.0 0.0.0.255 10.100.6.0 0.0.0.255
+ permit ip 10.10.50.0 0.0.0.255 10.100.7.0 0.0.0.255
+ permit ip 10.10.50.0 0.0.0.255 10.100.8.0 0.0.0.255
+ permit ip 10.10.50.0 0.0.0.255 10.100.9.0 0.0.0.255
+ permit ip 10.10.50.0 0.0.0.255 192.168.8.0 0.0.0.255
+ permit ip 10.10.50.0 0.0.0.255 192.168.48.0 0.0.3.255
+ permit ip 10.10.50.0 0.0.0.255 192.168.52.0 0.0.3.255
+ permit ip 10.10.50.0 0.0.0.255 192.168.56.0 0.0.0.255
+ permit ip 10.10.50.0 0.0.0.255 192.168.57.0 0.0.0.255
+ permit ip 10.10.50.0 0.0.0.255 192.168.58.0 0.0.0.255
+ permit ip 10.10.50.0 0.0.0.255 192.168.59.0 0.0.0.255
+ permit ip 10.10.50.0 0.0.0.255 192.168.60.0 0.0.0.255
+ permit ip 10.150.0.0 0.0.255.255 192.168.49.0 0.0.0.255
+ permit ip 10.150.0.0 0.0.255.255 192.168.61.0 0.0.0.255
+ permit ip 10.150.0.0 0.0.255.255 192.168.89.0 0.0.0.255
+ permit ip 10.20.30.0 0.0.0.255 192.168.49.0 0.0.0.255
+ permit ip 10.20.30.0 0.0.0.255 192.168.61.0 0.0.0.255
+ permit ip 10.20.30.0 0.0.0.255 192.168.89.0 0.0.0.255
+ permit ip 192.168.150.0 0.0.0.255 192.168.49.0 0.0.0.255
+ permit ip 192.168.150.0 0.0.0.255 192.168.61.0 0.0.0.255
+ permit ip 192.168.150.0 0.0.0.255 192.168.89.0 0.0.0.255
+ permit ip 172.16.50.0 0.0.0.255 192.168.49.0 0.0.0.255
+ permit ip 172.16.50.0 0.0.0.255 192.168.61.0 0.0.0.255
+ permit ip 172.16.50.0 0.0.0.255 192.168.89.0 0.0.0.255
+ permit ip 192.168.151.0 0.0.0.255 192.168.49.0 0.0.0.255
+ permit ip 192.168.151.0 0.0.0.255 192.168.61.0 0.0.0.255
+ permit ip 192.168.151.0 0.0.0.255 192.168.89.0 0.0.0.255
+ permit ip 10.10.50.0 0.0.0.255 192.168.49.0 0.0.0.255
+ permit ip 10.10.50.0 0.0.0.255 192.168.61.0 0.0.0.255
+ permit ip 10.10.50.0 0.0.0.255 192.168.89.0 0.0.0.255
+ip access-list extended acl-amzn
+ permit ip any 10.19.0.0 0.0.255.255
+ permit ip 10.19.0.0 0.0.255.255 any
+ip access-list extended acl-amzn-nat
+ deny   ip 192.168.151.0 0.0.0.255 172.16.3.0 0.0.0.255
+ deny   ip any 10.19.0.0 0.0.255.255
+ permit ip any any
+ip access-list extended acl-aws
+ permit ip any 0.0.0.0 255.255.255.0
+ deny   ip any any
+ip access-list extended acl-nat
+ deny   ip any 10.19.0.0 0.0.255.255
+ deny   ip any 10.0.0.0 0.255.255.255
+ deny   ip any 172.16.0.0 0.15.255.255
+ deny   ip any 192.168.0.0 0.0.255.255
+ permit ip 10.0.0.0 0.255.255.255 any
+ permit ip 172.16.0.0 0.15.255.255 any
+ permit ip 192.168.0.0 0.0.255.255 any
+ip access-list extended amzn-filter
+ permit ip 10.19.0.0 0.0.255.255 any
+ deny   ip any any
+!
+!
+ip prefix-list UKnetworks_to_dmvpn seq 5 permit 10.150.0.0/24
+ip prefix-list UKnetworks_to_dmvpn seq 10 permit 10.150.1.0/24
+ip prefix-list UKnetworks_to_dmvpn seq 15 permit 10.150.2.0/24
+ip prefix-list UKnetworks_to_dmvpn seq 20 permit 10.150.3.0/24
+ip prefix-list UKnetworks_to_dmvpn seq 25 permit 10.150.4.0/24
+ip prefix-list UKnetworks_to_dmvpn seq 30 permit 10.150.5.0/24
+ip prefix-list UKnetworks_to_dmvpn seq 35 permit 10.150.6.0/24
+ip prefix-list UKnetworks_to_dmvpn seq 40 permit 10.150.7.0/24
+ip prefix-list UKnetworks_to_dmvpn seq 45 permit 10.150.8.0/24
+ip prefix-list UKnetworks_to_dmvpn seq 50 permit 10.150.9.0/24
+ip prefix-list UKnetworks_to_dmvpn seq 55 permit 192.168.150.0/24
+ip prefix-list UKnetworks_to_dmvpn seq 56 permit 192.168.151.0/24
+ip prefix-list UKnetworks_to_dmvpn seq 60 permit 10.20.30.0/24
+ip prefix-list UKnetworks_to_dmvpn seq 65 permit 172.16.50.0/24
+ip prefix-list UKnetworks_to_dmvpn seq 70 permit 172.16.3.160/27
+ip radius source-interface FastEthernet4.150 
+ip sla 100
+ icmp-echo 169.254.20.245 source-interface Tunnel1
+ frequency 5
+ip sla schedule 100 life forever start-time now
+ip sla 200
+ icmp-echo 169.254.23.65 source-interface Tunnel2
+ frequency 5
+ip sla schedule 200 life forever start-time now
+!
+route-map CONNECTED_TO_EIGRP permit 10
+ match ip address prefix-list UKnetworks_to_dmvpn
+!
+snmp-server community wso2 RO
+snmp-server ifindex persist
+access-list 101 deny   ip 192.168.151.0 0.0.0.255 172.16.3.0 0.0.0.255
+access-list 101 deny   ip any 10.0.0.0 0.255.255.255
+access-list 101 deny   ip any 172.16.0.0 0.15.255.255
+access-list 101 deny   ip any 192.168.0.0 0.0.255.255
+access-list 101 permit ip 10.0.0.0 0.255.255.255 any
+access-list 101 permit ip 172.16.0.0 0.15.255.255 any
+access-list 102 permit ip 10.150.0.0 0.0.0.255 172.16.3.0 0.0.0.255
+access-list 102 permit ip 10.150.1.0 0.0.0.255 172.16.3.0 0.0.0.255
+access-list 102 permit ip 10.150.2.0 0.0.0.255 172.16.3.0 0.0.0.255
+access-list 102 permit ip 10.150.3.0 0.0.0.255 172.16.3.0 0.0.0.255
+access-list 102 permit ip 10.150.4.0 0.0.0.255 172.16.3.0 0.0.0.255
+access-list 102 permit ip 10.150.5.0 0.0.0.255 172.16.3.0 0.0.0.255
+access-list 102 permit ip 10.150.6.0 0.0.0.255 172.16.3.0 0.0.0.255
+access-list 102 permit ip 10.150.7.0 0.0.0.255 172.16.3.0 0.0.0.255
+access-list 102 permit ip 10.150.8.0 0.0.0.255 172.16.3.0 0.0.0.255
+access-list 102 permit ip 10.150.9.0 0.0.0.255 172.16.3.0 0.0.0.255
+access-list 102 permit ip 192.168.150.0 0.0.0.255 172.16.3.0 0.0.0.255
+access-list 102 permit ip 192.168.151.0 0.0.0.255 172.16.3.0 0.0.0.255
+access-list 102 permit ip 10.20.30.0 0.0.0.255 172.16.3.0 0.0.0.255
+access-list 102 permit ip 172.16.50.0 0.0.0.255 172.16.3.0 0.0.0.255
+access-list 102 permit ip 203.94.95.0 0.0.0.255 172.16.3.0 0.0.0.255
+access-list 102 permit ip 192.168.0.0 0.0.255.255 172.16.3.0 0.0.0.255
+access-list 112 deny   ip 10.150.0.0 0.0.0.255 172.16.3.0 0.0.0.255
+access-list 112 deny   ip 10.150.1.0 0.0.0.255 172.16.3.0 0.0.0.255
+access-list 112 deny   ip 10.150.2.0 0.0.0.255 172.16.3.0 0.0.0.255
+access-list 112 deny   ip 10.150.3.0 0.0.0.255 172.16.3.0 0.0.0.255
+access-list 112 deny   ip 10.150.4.0 0.0.0.255 172.16.3.0 0.0.0.255
+access-list 112 deny   ip 10.150.5.0 0.0.0.255 172.16.3.0 0.0.0.255
+access-list 112 deny   ip 10.150.6.0 0.0.0.255 172.16.3.0 0.0.0.255
+access-list 112 deny   ip 10.150.7.0 0.0.0.255 172.16.3.0 0.0.0.255
+access-list 112 deny   ip 10.150.8.0 0.0.0.255 172.16.3.0 0.0.0.255
+access-list 112 deny   ip 10.150.9.0 0.0.0.255 172.16.3.0 0.0.0.255
+access-list 112 deny   ip 192.168.150.0 0.0.0.255 172.16.3.0 0.0.0.255
+access-list 112 deny   ip 192.168.151.0 0.0.0.255 172.16.3.0 0.0.0.255
+access-list 112 deny   ip 10.20.30.0 0.0.0.255 172.16.3.0 0.0.0.255
+access-list 112 deny   ip 172.16.50.0 0.0.0.255 172.16.3.0 0.0.0.255
+access-list 112 permit ip any any
+!
+!
+!
+control-plane
+!
+!
+mgcp behavior rsip-range tgcp-only
+mgcp behavior comedia-role none
+mgcp behavior comedia-check-media-src disable
+mgcp behavior comedia-sdp-force disable
+!
+mgcp profile default
+!
+!
+!
+!
+!
+!
+banner motd ^C
+                ************************************************
+                *     ACCESS TO THIS SYSTEM IS PROHIBITED      *
+                *              UNLESS AUTHORISED               *
+                * ACCESSING PROGRAMS AND DATA UNRELATED TO YOU *
+                *    IS PROHIBITED AND IS WRONGFUL UNDER LAW   *
+                ************************************************
+^C
+!
+line con 0
+ exec-timeout 5 0
+ logging synchronous
+ login authentication Console-Access
+ no modem enable
+line aux 0
+line 2
+ no activation-character
+ no exec
+ transport preferred none
+ transport input all
+ stopbits 1
+line vty 0 4
+ exec-timeout 5 0
+ login authentication VTY-Access
+ transport input ssh
+!
+scheduler allocate 20000 1000
+ntp server 192.168.8.88 prefer
+!
+!
+!
+end
+
+--------------------------------------------
+----- Command: show ip interface brief -----
+--------------------------------------------
+
+Interface                  IP-Address      OK? Method Status                Protocol
+FastEthernet0              unassigned      YES unset  up                    up      
+FastEthernet1              unassigned      YES unset  up                    up      
+FastEthernet2              unassigned      YES unset  up                    up      
+FastEthernet3              unassigned      YES unset  administratively down down    
+FastEthernet4              unassigned      YES NVRAM  up                    up      
+FastEthernet4.20           10.150.10.254   YES NVRAM  up                    up      
+FastEthernet4.50           10.150.0.254    YES NVRAM  up                    up      
+FastEthernet4.51           10.150.1.254    YES NVRAM  up                    up      
+FastEthernet4.52           10.150.2.254    YES NVRAM  up                    up      
+FastEthernet4.53           10.150.3.254    YES NVRAM  up                    up      
+FastEthernet4.54           10.150.4.254    YES NVRAM  up                    up      
+FastEthernet4.55           10.150.5.254    YES NVRAM  up                    up      
+FastEthernet4.56           10.150.6.254    YES NVRAM  up                    up      
+FastEthernet4.57           10.150.7.254    YES NVRAM  up                    up      
+FastEthernet4.58           10.150.8.254    YES NVRAM  up                    up      
+FastEthernet4.59           10.150.9.254    YES NVRAM  up                    up      
+FastEthernet4.150          192.168.150.254 YES NVRAM  up                    up      
+FastEthernet4.230          10.20.30.254    YES NVRAM  up                    up      
+FastEthernet4.350          172.16.50.254   YES NVRAM  up                    up      
+FastEthernet4.550          10.10.50.254    YES NVRAM  up                    up      
+NVI0                       10.150.10.254   YES unset  up                    up      
+Tunnel1                    169.254.20.246  YES NVRAM  up                    down    
+Tunnel2                    169.254.23.66   YES NVRAM  up                    down    
+Tunnel20                   10.2.2.3        YES NVRAM  up                    up      
+Vlan1                      unassigned      YES unset  up                    up      
+Vlan2                      unassigned      YES unset  down                  down    
+Vlan151                    192.168.151.254 YES NVRAM  up                    up      
+Vlan350                    unassigned      YES unset  up                    up      
+Vlan999                    91.143.79.154   YES NVRAM  administratively down down    
+Vlan1500                   195.188.181.210 YES NVRAM  up                    up      
+Vlan2824                   80.209.143.14   YES NVRAM  up                    up      
+Wlan-GigabitEthernet0      unassigned      YES unset  up                    up      
+wlan-ap0                   unassigned      YES NVRAM  up                    up      
+-----------------------------------------------
+----- Command: show interface description -----
+-----------------------------------------------
+
+Interface                      Status         Protocol Description
+Fa0                            up             up       
+Fa1                            up             up       
+Fa2                            up             up       
+Fa3                            admin down     down     
+Fa4                            up             up       ## SW-UK-24POE:Gig 1/0/3
+Fa4.20                         up             up       ## WSO2 Infra ##
+Fa4.50                         up             up       ## ENG_01 ##
+Fa4.51                         up             up       ## ENG_02 ##
+Fa4.52                         up             up       ## Admin_Finance ##
+Fa4.53                         up             up       ## Non_Tech ##
+Fa4.54                         up             up       ## Short_Term ##
+Fa4.55                         up             up       ## ENG_03 ##
+Fa4.56                         up             up       ## ENG_04 ##
+Fa4.57                         up             up       ## ENG_05 ##
+Fa4.58                         up             up       ## ENG_06 ##
+Fa4.59                         up             up       ## IOT ##
+Fa4.150                        up             up       ## SERVERS ##
+Fa4.230                        up             up       ## VOIP ##
+Fa4.350                        up             up       ## MANAGEMENT ##
+Fa4.550                        up             up       ## GUEST ##
+NV0                            up             up       
+Tu1                            up             down     
+Tu2                            up             down     
+Tu20                           up             up       DMVPN_10.2.2.0_SPOKE_UK
+Vl1                            up             up       
+Vl2                            down           down     
+Vl151                          up             up       ## SERVERS-BACKUP ##
+Vl350                          up             up       
+Vl999                          admin down     down     
+Vl1500                         up             up       
+Vl2824                         up             up       
+Wl0                            up             up       Internal switch interface connecting to the embedded AP
+wl0                            up             up       Embedded Service module interface to manage the embedded AP
+---------------------------------
+----- Command: show version -----
+---------------------------------
+
+Cisco IOS Software, C800 Software (C800-UNIVERSALK9-M), Version 15.4(3)M4, RELEASE SOFTWARE (fc1)
+Technical Support: http://www.cisco.com/techsupport
+Copyright (c) 1986-2015 by Cisco Systems, Inc.
+Compiled Sun 27-Sep-15 08:36 by prod_rel_team
+
+ROM: System Bootstrap, Version 15.1(4r)M, RELEASE SOFTWARE (fc1)
+
+RO-UK-WAN uptime is 13 weeks, 4 days, 4 hours, 27 minutes
+System returned to ROM by reload at 08:30:13 UTC Thu Jan 16 2020
+System restarted at 08:32:50 UTC Thu Jan 16 2020
+System image file is "flash:/c800-universalk9-mz.SPA.154-3.M4.bin"
+Last reload type: Normal Reload
+Last reload reason: Reload Command
+
+
+
+This product contains cryptographic features and is subject to United
+States and local country laws governing import, export, transfer and
+use. Delivery of Cisco cryptographic products does not imply
+third-party authority to import, export, distribute or use encryption.
+Importers, exporters, distributors and users are responsible for
+compliance with U.S. and local country laws. By using this product you
+agree to comply with applicable laws and regulations. If you are unable
+to comply with U.S. and local laws, return this product immediately.
+
+A summary of U.S. laws governing Cisco cryptographic products may be found at:
+http://www.cisco.com/wwl/export/crypto/tool/stqrg.html
+
+If you require further assistance please contact us by sending email to
+export@cisco.com.
+
+Cisco C881W-E-K9 (revision 1.0) with 363596K/29619K bytes of memory.
+Processor board ID FCZ172992FN
+5 FastEthernet interfaces
+1 Gigabit Ethernet interface
+1 terminal line
+1 Virtual Private Network (VPN) Module
+1 cisco Embedded AP (s)
+DRAM configuration is 32 bits wide
+255K bytes of non-volatile configuration memory.
+250880K bytes of ATA System CompactFlash (Read/Write)
+
+
+License Info:
+
+License UDI:
+
+-------------------------------------------------
+Device#	  PID			SN
+-------------------------------------------------
+*1  	  C881W-E-K9            FCZ172992FN     
+
+
+
+License Information for 'c800'
+    License Level: advipservices   Type: Permanent
+    Next reboot license Level: advipservices
+
+
+Configuration register is 0x2102
+
+---------------------------------------
+----- Command: show cdp neighbors -----
+---------------------------------------
+
+Capability Codes: R - Router, T - Trans Bridge, B - Source Route Bridge
+                  S - Switch, H - Host, I - IGMP, r - Repeater, P - Phone, 
+                  D - Remote, C - CVTA, M - Two-port Mac Relay 
+
+Device ID        Local Intrfce     Holdtme    Capability  Platform  Port ID
+ap               Gig 0             125              T I   AP802GN-E Gig 0
+davidstone_N16DZ_TTB0825647
+                 Fas 0             157            R B S I CISCO1941 Gig 0/1.1
+SW-UK-24POE.wso2.com
+                 Fas 4             169              S I   WS-C2960S Gig 1/0/3
+
+Total cdp entries displayed : 3
+---------------------------------------------
+----- Command: show process cpu history -----
+---------------------------------------------
+
+RO-UK-WAN   12:50:38 PM Monday Apr 20 2020 UTC
+
+                                                                  
+                                                                  
+                                                                  
+      11112222211111                                              
+      666655555222226666666666666665555577777555557777777777666665
+  100                                                             
+   90                                                             
+   80                                                             
+   70                                                             
+   60                                                             
+   50                                                             
+   40                                                             
+   30     *****                                                   
+   20 *********                                                   
+   10 ************************************************************
+     0....5....1....1....2....2....3....3....4....4....5....5....6
+               0    5    0    5    0    5    0    5    0    5    0
+               CPU% per second (last 60 seconds)
+
+                                                                  
+                                                                  
+                                                                  
+       1 1 1 111 1 1 111 1 1 1 1 1 1 1 1 1 1 1 1111111 1 1 1 1 1 1
+      838183822171818122818381718392838172828271032422717194819291
+  100                                                             
+   90                                                             
+   80                                                             
+   70                                                             
+   60                                                             
+   50                                                             
+   40                                                             
+   30                                                             
+   20                                                             
+   10 ############################################################
+     0....5....1....1....2....2....3....3....4....4....5....5....6
+               0    5    0    5    0    5    0    5    0    5    0
+               CPU% per minute (last 60 minutes)
+              * = maximum CPU%   # = average CPU%
+
+                                                                              
+                                                                              
+                                                                              
+      111111111111119111321111111112111111119111331311111111111111119111311121
+      427836322337229322357218413354223334399232343333213368334153236222043214
+  100               *                       *                       *         
+   90               *                       *                       *         
+   80               *                       *                       *         
+   70               *                       *                       *         
+   60               *                       *                       *         
+   50               *                       *                       *         
+   40               *                       *                       *         
+   30               *   **                  *   ** *                *   *     
+   20   ** *     *  *   ***  *    **       **   ** *      **    *   *   *   * 
+   10 ########################################################################
+     0....5....1....1....2....2....3....3....4....4....5....5....6....6....7..
+               0    5    0    5    0    5    0    5    0    5    0    5    0  
+                   CPU% per hour (last 72 hours)
+                  * = maximum CPU%   # = average CPU%
+
+
+-------------------------------
+----- Command: show clock -----
+-------------------------------
+
+12:50:39.619 UTC Mon Apr 20 2020
