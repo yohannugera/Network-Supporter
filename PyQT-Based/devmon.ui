@@ -480,7 +480,7 @@
       </widget>
       <widget class="QWidget" name="multiple_device_tab">
        <attribute name="title">
-        <string>Multiple Device</string>
+        <string>Multiple Devices</string>
        </attribute>
        <widget class="QToolBox" name="multiple_device_toolbox">
         <property name="geometry">
@@ -492,7 +492,7 @@
          </rect>
         </property>
         <property name="currentIndex">
-         <number>0</number>
+         <number>1</number>
         </property>
         <widget class="QWidget" name="manual_add_page">
          <property name="geometry">

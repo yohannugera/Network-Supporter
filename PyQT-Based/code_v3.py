@@ -2,32 +2,11 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import QRegExp
 from netmiko import ConnectHandler
 
-class FileApp(QtWidgets.QWidget):
-    def __init__(self):
-        super().__init__()
-        self.title = 'File Dialogs'
-        self.left = 10
-        self.top = 10
-        self.width = 640
-        self.height = 480
-        self.initUI()
-    def initUI(self):
-        self.setWindowTitle(self.title)
-        self.setGeometry(self.left, self.top, self.width, self.height)
-        self.openFileNameDialog()
-        self.show()
-    def openFileNameDialog(self):
-        options = QtWidgets.QFileDialog.Options()
-        options |= QtWidgets.QFileDialog.DontUseNativeDialog
-        fileName, _ = QtWidgets.QFileDialog.getOpenFileName(self, "File Dialog", "",
-                                                            "All Files (*);;CSV Files (*.csv)", options=options)
-        if fileName:
-            print(fileName)
-
-class Ui_MainWindow(object):
+class Ui_MainWindow(QtWidgets.QWidget):
     # Local Variables
     models = ['cisco_ios','cisco_asa','fortinet']
     purpose = ['Basic Troubleshooting','Performance Related']
+    selected_file = ""
 
     # Button functions
     def go_ssh_button_clicked(self):
@@ -41,20 +20,7 @@ class Ui_MainWindow(object):
         else:
             print("Hooray, you got through")
     def go_console_button_clicked(self):
-        com_port = self.com_port_console_entry.text()
-        com_baud = self.baud_rate_console_entry.text()
-        console_username = self.username_console_entry.text()
-        console_password = self.password_console_entry.text()
-        console_model = self.model_console_combobox.currentText()
-        console_purpose = self.purpose_console_combobox.currentText()
-        if (com_port == "") or (console_username == "") or (console_password == "") or (com_baud == ""):
-            print("Please enter all details")
-        else:
-            print("Hooray, you got through")
-    def go_manual_button_clicked(self):
-        print("Go Manual Button Clicked!")
-    def go_file_button_clicked(self):
-        print("Go File Button Clicked!")
+        print("This feature not yet implemented...")
     def add_row(self):
         rowPosition = self.manual_device_table.rowCount()
         self.manual_device_table.insertRow(rowPosition)
@@ -71,9 +37,15 @@ class Ui_MainWindow(object):
         indices = self.manual_device_table.selectionModel().selectedRows()
         for index in sorted(indices):
             self.manual_device_table.removeRow(index.row())
-    def get_file(self):
-        fileapp = QtWidgets.QApplication(sys.argv)
-        file_ex = FileApp()
+    def go_manual_button_clicked(self):
+        print("Go Manual Button Clicked!")
+    def get_file_button_clicked(self):
+        file_name = QtWidgets.QFileDialog.getOpenFileName(self, 'Open file',
+                                                      "", "CSV files (*.csv)")
+        self.selected_file = file_name[0]
+        self.get_file_button.setText(self.selected_file)
+    def go_file_button_clicked(self):
+        print("Go File Button Clicked!")
 
     # Qt Designer Generated
     def setupUi(self, MainWindow):
@@ -310,7 +282,7 @@ class Ui_MainWindow(object):
         self.go_file_button.setText(_translate("MainWindow", "GO"))
         self.get_file_button.setText(_translate("MainWindow", "Select a File"))
         self.multiple_device_toolbox.setItemText(self.multiple_device_toolbox.indexOf(self.file_add_page), _translate("MainWindow", "Import Devices from a File"))
-        self.tabWidget.setTabText(self.tabWidget.indexOf(self.multiple_device_tab), _translate("MainWindow", "Multiple Device"))
+        self.tabWidget.setTabText(self.tabWidget.indexOf(self.multiple_device_tab), _translate("MainWindow", "Multiple Devices"))
 
         self.refillUi(MainWindow)
 
@@ -323,15 +295,25 @@ class Ui_MainWindow(object):
         ipValidator = QtGui.QRegExpValidator(ipRegex)
 
         ## Embelishments
-        # via SSH on single device
+        # Single Device / via SSH
         self.device_ip_entry.setPlaceholderText("Enter IP...")
         self.device_ip_entry.setValidator(ipValidator)
         self.username_ssh_entry.setPlaceholderText("Enter Username...")
         self.password_ssh_entry.setPlaceholderText("Enter Password...")
         self.password_ssh_entry.setEchoMode(self.password_ssh_entry.Password)
         self.go_ssh_button.clicked.connect(self.go_ssh_button_clicked)
+
+        # Single Device / via CONSOLE
+        self.baud_rate_console_entry.setPlaceholderText("Baud Rate...")
+        self.com_port_console_entry.setPlaceholderText("COM Port...")
+        self.username_console_entry.setPlaceholderText("Enter Username...")
+        self.password_console_entry.setPlaceholderText("Enter Password...")
+        self.password_console_entry.setEchoMode(self.password_console_entry.Password)
+        self.enable_console_entry.setPlaceholderText("Enter Enable Secret...")
+        self.enable_console_entry.setEchoMode(self.enable_console_entry.Password)
         self.go_console_button.clicked.connect(self.go_console_button_clicked)
 
+        # Multiple Devices / Add Devices Manually
         manual_device_current = self.manual_device_table.rowCount()
         for index in range(manual_device_current):
             model_combo = QtWidgets.QComboBox()
@@ -343,13 +325,13 @@ class Ui_MainWindow(object):
                 purpose_combo.addItem(t)
             self.manual_device_table.setCellWidget(index, 4, purpose_combo)
             self.manual_device_table.horizontalHeader().setSectionResizeMode(4, QtWidgets.QHeaderView.ResizeToContents)
-
-        self.go_manual_button.clicked.connect(self.go_manual_button_clicked)
         self.add_row_button.clicked.connect(self.add_row)
         self.delete_row_button.clicked.connect(self.delete_row)
+        self.go_manual_button.clicked.connect(self.go_manual_button_clicked)
 
+        # Multiple Devices / Import Devices from a File
         self.go_file_button.clicked.connect(self.go_file_button_clicked)
-        self.get_file_button.clicked.connect(self.get_file)
+        self.get_file_button.clicked.connect(self.get_file_button_clicked)
 
 if __name__ == "__main__":
     import sys
