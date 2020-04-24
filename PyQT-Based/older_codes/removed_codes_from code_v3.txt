@@ -1,0 +1,26 @@
+TIME_LIMIT = 100
+class Backend_Process(QtCore.QThread):
+    countChanged = QtCore.pyqtSignal(str)
+    def run(self):
+        count = 0
+        while count < TIME_LIMIT:
+            count+=1
+            time.sleep(1)
+            self.countChanged.emit(str(count))
+
+# Inside main_ui
+    def show_popup(self):
+        self.msg = QtWidgets.QMessageBox()
+        self.msg.setWindowTitle("Status")
+        self.msg.setText("Information Gathering in progress...")
+        self.msg.setIcon(QtWidgets.QMessageBox.Question)
+        self.msg.setStandardButtons(QtWidgets.QMessageBox.Abort)
+        self.msg.setDetailedText(self.popup_notification)
+        self.calc = Backend_Process()
+        self.calc.countChanged.connect(self.popup_msg)
+        self.calc.start()
+        self.msg.show()
+        sys.exit(self.msg.exec_())
+    def popup_msg(self, value):
+        self.popup_notification = self.popup_notification+"\n"+value
+        self.msg.setDetailedText(self.popup_notification)

@@ -1,17 +1,49 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import QRegExp
+import sys, time, traceback
 from netmiko import ConnectHandler
 
-class Backend_Process(QtCore.QThread):
-    countChanged = QtCore.pyqtSignal(str)
+class WorkerSignals(QtCore.QObject):
+    finished = QtCore.pyqtSignal()
+    error = QtCore.pyqtSignal(tuple)
+    result = QtCore.pyqtSignal(object)
+    progress = QtCore.pyqtSignal(int)
+class Worker(QtCore.QRunnable):
+    def __init__(self, fn, ip, username, password, model, *commands):
+        super(Worker, self).__init__()
+
+        # Store constructor arguments (re-used for processing)
+        self.fn = fn
+        self.ip = ip
+        self.username = username
+        self.password = password
+        self.model = model
+        self.commands = commands
+        self.signals = WorkerSignals()
+
+        # Add the callback to our kwargs
+        self.kwargs['progress_callback'] = self.signals.progress
+
+    @pyqtSlot()
     def run(self):
-        self.countChanged.emit("Hello World")
+        # Retrieve args/kwargs here; and fire processing using them
+        try:
+            result = self.fn(*self.args, **self.kwargs)
+        except:
+            traceback.print_exc()
+            exctype, value = sys.exc_info()[:2]
+            self.signals.error.emit((exctype, value, traceback.format_exc()))
+        else:
+            self.signals.result.emit(result)  # Return the result of the processing
+        finally:
+            self.signals.finished.emit()  # Done
 
 class Ui_MainWindow(QtWidgets.QWidget):
     # Local Variables
     models = ['cisco_ios','cisco_asa','fortinet']
     purpose = ['Basic Troubleshooting','Performance Related']
     selected_file = ""
+    popup_notification = "Process Started..."
 
     # Button functions
     def go_ssh_button_clicked(self):
@@ -23,8 +55,7 @@ class Ui_MainWindow(QtWidgets.QWidget):
         if (ssh_ip=="") or (ssh_username=="") or (ssh_password==""):
             print("Please enter all details")
         else:
-            print("Hooray, you got through")
-            self.show_popup()
+            self.get_logs(ssh_ip, ssh_username, ssh_password, ssh_model, 'show run', 'show ip interface brief')
     def go_console_button_clicked(self):
         print("This feature not yet implemented...")
     def add_row_button_clicked(self):
@@ -53,21 +84,47 @@ class Ui_MainWindow(QtWidgets.QWidget):
     def go_file_button_clicked(self):
         print("Go File Button Clicked!")
 
-    # Pop-up window
-    def show_popup(self):
-        msg = QtWidgets.QMessageBox()
-        msg.setWindowTitle("Status")
-        msg.setText("Information Gathering in progress...")
-        msg.setIcon(QtWidgets.QMessageBox.Question)
-        msg.setStandardButtons(QtWidgets.QMessageBox.Abort)
-        msg.setDetailedText("Detail 01")
-        self.calc = Backend_Process()
-        self.calc.countChanged.connect(self.popup_message)
-        self.calc.start()
-        msg.show()
-        sys.exit(msg.exec_())
-    def popup_message(self, value):
-        print(value)
+    # Connect to device...
+    def connect_device(self, progress_callback, ip, username, password, model, *purpose):
+        device = ConnectHandler(device_type=model,
+                                ip=ip,
+                                username=username,
+                                password=password)
+        progress_callback.emit("Connected to",ip)
+        f = open("tshoot.log", "a")
+        for command in purpose:
+            progress_callback.emit("Getting",command,"output")
+            output = device.send_command(command)
+            header_text = '----- Command: ' + command + ' -----'
+            f.write('-' * len(header_text) + '\n')
+            f.write(header_text + '\n')
+            f.write('-' * len(header_text) + '\n')
+            f.write('\n')
+            f.write(output)
+            f.write('\n')
+        f.close()
+        device.disconnect()
+        return("Log Collection for",ip,"done.")
+    def get_logs(self, ip, username, password, model, *commands):
+        self.msg = QtWidgets.QMessageBox()
+        self.msg.setWindowTitle("Status")
+        self.msg.setText("Information Gathering in progress...")
+        self.msg.setIcon(QtWidgets.QMessageBox.Question)
+        self.msg.setStandardButtons(QtWidgets.QMessageBox.Abort)
+        self.msg.setDetailedText(self.popup_notification)
+        worker = Worker(self.connect_device, ip, username, password, model, 'show run', 'show ip int br')  # Any other args, kwargs are passed to the run function
+        worker.signals.result.connect(self.print_output)
+        worker.signals.finished.connect(self.finish_popup_msg)
+        worker.signals.progress.connect(self.change_popup_msg)
+        self.msg.show()
+        sys.exit(self.msg.exec_())
+    def change_popup_msg(self, value):
+        self.popup_notification = self.popup_notification + "\n" + value
+        self.msg.setDetailedText(self.popup_notification)
+    def finish_popup_msg(self, value):
+        # Not coded yet
+    def print_output(self, value):
+        # Not coded yet
 
     # Qt Designer Generated
     def setupUi(self, MainWindow):
@@ -315,6 +372,7 @@ class Ui_MainWindow(QtWidgets.QWidget):
         ipRange = "(?:[0-1]?[0-9]?[0-9]|2[0-4][0-9]|25[0-5])"  # Part of the regular expression
         ipRegex = QRegExp("^" + ipRange + "\\." + ipRange + "\\." + ipRange + "\\." + ipRange + "$")
         ipValidator = QtGui.QRegExpValidator(ipRegex)
+        self.threadpool = QThreadPool()
 
         ## Embelishments
         # Single Device / via SSH
