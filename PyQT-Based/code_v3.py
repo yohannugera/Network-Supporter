@@ -1,15 +1,16 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import QRegExp
-import sys, time, traceback
+import time
+import traceback
 from netmiko import ConnectHandler
 
 class WorkerSignals(QtCore.QObject):
     finished = QtCore.pyqtSignal()
     error = QtCore.pyqtSignal(tuple)
     result = QtCore.pyqtSignal(object)
-    progress = QtCore.pyqtSignal(int)
+    progress = QtCore.pyqtSignal(str)
 class Worker(QtCore.QRunnable):
-    def __init__(self, fn, ip, username, password, model, *commands):
+    def __init__(self, fn, ip, username, password, model, *commands, **kwargs):
         super(Worker, self).__init__()
 
         # Store constructor arguments (re-used for processing)
@@ -19,16 +20,20 @@ class Worker(QtCore.QRunnable):
         self.password = password
         self.model = model
         self.commands = commands
+        self.kwargs = kwargs
         self.signals = WorkerSignals()
 
         # Add the callback to our kwargs
         self.kwargs['progress_callback'] = self.signals.progress
-
-    @pyqtSlot()
+    @QtCore.pyqtSlot()
     def run(self):
-        # Retrieve args/kwargs here; and fire processing using them
         try:
-            result = self.fn(*self.args, **self.kwargs)
+            result = self.fn(self.ip,
+                             self.username,
+                             self.password,
+                             self.model,
+                             *self.commands,
+                             **self.kwargs)
         except:
             traceback.print_exc()
             exctype, value = sys.exc_info()[:2]
@@ -85,15 +90,15 @@ class Ui_MainWindow(QtWidgets.QWidget):
         print("Go File Button Clicked!")
 
     # Connect to device...
-    def connect_device(self, progress_callback, ip, username, password, model, *purpose):
+    def connect_device(self, ip, username, password, model, *commands, progress_callback):
         device = ConnectHandler(device_type=model,
                                 ip=ip,
                                 username=username,
                                 password=password)
-        progress_callback.emit("Connected to",ip)
+        progress_callback.emit("Connected to "+ip)
         f = open("tshoot.log", "a")
-        for command in purpose:
-            progress_callback.emit("Getting",command,"output")
+        for command in commands:
+            progress_callback.emit("Getting output of \""+command+"\"")
             output = device.send_command(command)
             header_text = '----- Command: ' + command + ' -----'
             f.write('-' * len(header_text) + '\n')
@@ -104,27 +109,46 @@ class Ui_MainWindow(QtWidgets.QWidget):
             f.write('\n')
         f.close()
         device.disconnect()
-        return("Log Collection for",ip,"done.")
+        return("Log Collection for "+ip+" done.")
+
+    # Multitasking log collection...
     def get_logs(self, ip, username, password, model, *commands):
+        # Create a new thread and pass the process to it
+        worker = Worker(self.tmp_connect_device,
+                        ip,
+                        username,
+                        password,
+                        model,
+                        commands)
+        worker.signals.result.connect(self.finish_popup_msg)
+        worker.signals.finished.connect(self.finish_thread_msg)
+        worker.signals.progress.connect(self.change_popup_msg)
+        # Execute
+        self.threadpool.start(worker)
         self.msg = QtWidgets.QMessageBox()
         self.msg.setWindowTitle("Status")
         self.msg.setText("Information Gathering in progress...")
         self.msg.setIcon(QtWidgets.QMessageBox.Question)
-        self.msg.setStandardButtons(QtWidgets.QMessageBox.Abort)
+        self.msg.setStandardButtons(QtWidgets.QMessageBox.Close)
         self.msg.setDetailedText(self.popup_notification)
-        worker = Worker(self.connect_device, ip, username, password, model, 'show run', 'show ip int br')  # Any other args, kwargs are passed to the run function
-        worker.signals.result.connect(self.print_output)
-        worker.signals.finished.connect(self.finish_popup_msg)
-        worker.signals.progress.connect(self.change_popup_msg)
         self.msg.show()
         sys.exit(self.msg.exec_())
-    def change_popup_msg(self, value):
-        self.popup_notification = self.popup_notification + "\n" + value
+    def tmp_connect_device(self, ip, username, password, model, commands, progress_callback):
+        # After GUI testing is done. Replace this by connect_device...
+        progress_callback.emit("Connected to "+ip)
+        for command in commands:
+            time.sleep(5)
+            progress_callback.emit("Getting output of \""+command+"\"")
+        return("Log Collection for "+ip+" done.")
+    def change_popup_msg(self, n):
+        self.popup_notification = self.popup_notification + "\n" + n
         self.msg.setDetailedText(self.popup_notification)
-    def finish_popup_msg(self, value):
-        # Not coded yet
-    def print_output(self, value):
-        # Not coded yet
+    def finish_popup_msg(self, s):
+        self.popup_notification = self.popup_notification + "\n" + s
+        self.msg.setDetailedText(self.popup_notification)
+    def finish_thread_msg(self):
+        self.popup_notification = self.popup_notification + "\n" + "Process finished!"
+        self.msg.setDetailedText(self.popup_notification)
 
     # Qt Designer Generated
     def setupUi(self, MainWindow):
@@ -372,7 +396,7 @@ class Ui_MainWindow(QtWidgets.QWidget):
         ipRange = "(?:[0-1]?[0-9]?[0-9]|2[0-4][0-9]|25[0-5])"  # Part of the regular expression
         ipRegex = QRegExp("^" + ipRange + "\\." + ipRange + "\\." + ipRange + "\\." + ipRange + "$")
         ipValidator = QtGui.QRegExpValidator(ipRegex)
-        self.threadpool = QThreadPool()
+        self.threadpool = QtCore.QThreadPool()
 
         ## Embelishments
         # Single Device / via SSH
