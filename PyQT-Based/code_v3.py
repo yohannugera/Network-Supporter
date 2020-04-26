@@ -44,7 +44,11 @@ class Worker(QtCore.QRunnable):
             self.signals.finished.emit()  # Done
 
 class Ui_MainWindow(QtWidgets.QWidget):
-    # Local Variables
+    # Local Variables and Hardening Stuff...
+    threadpool = QtCore.QThreadPool()
+    ipRange = "(?:[0-1]?[0-9]?[0-9]|2[0-4][0-9]|25[0-5])"  # Part of the regular expression
+    ipRegex = QRegExp("^" + ipRange + "\\." + ipRange + "\\." + ipRange + "\\." + ipRange + "$")
+    ipValidator = QtGui.QRegExpValidator(ipRegex)
     models = ['cisco_ios','cisco_asa','fortinet']
     purpose = ['Basic Troubleshooting','Performance Related']
     selected_file = ""
@@ -58,11 +62,18 @@ class Ui_MainWindow(QtWidgets.QWidget):
         ssh_model = self.model_ssh_combobox.currentText()
         ssh_purpose = self.purpose_ssh_combobox.currentText()
         if (ssh_ip=="") or (ssh_username=="") or (ssh_password==""):
-            print("Please enter all details")
+            self.caution_msg()
         else:
             self.get_logs(ssh_ip, ssh_username, ssh_password, ssh_model, 'show run', 'show ip interface brief')
     def go_console_button_clicked(self):
-        print("This feature not yet implemented...")
+        baud_rate = self.baud_rate_console_entry.text()
+        com_port = self.com_port_console_entry.text()
+        username = self.username_console_entry.text()
+        password = self.password_console_entry.text()
+        enable_secret = self.enable_console_entry.text()
+        model = self.model_console_combobox.currentText()
+        purpose = self.purpose_console_combobox.currentText()
+        self.not_coded_msg()
     def add_row_button_clicked(self):
         rowPosition = self.manual_device_table.rowCount()
         self.manual_device_table.insertRow(rowPosition)
@@ -80,14 +91,16 @@ class Ui_MainWindow(QtWidgets.QWidget):
         for index in sorted(indices):
             self.manual_device_table.removeRow(index.row())
     def go_manual_button_clicked(self):
-        print("Go Manual Button Clicked!")
+        for entry in range(self.manual_device_table.rowCount()):
+            print(self.manual_device_table.item(entry,0).text())
+        self.not_coded_msg()
     def get_file_button_clicked(self):
         file_name = QtWidgets.QFileDialog.getOpenFileName(self, 'Open file',
                                                       "", "CSV files (*.csv)")
         self.selected_file = file_name[0]
         self.get_file_button.setText(self.selected_file)
     def go_file_button_clicked(self):
-        print("Go File Button Clicked!")
+        self.not_coded_msg()
 
     # Connect to device...
     def connect_device(self, ip, username, password, model, *commands, progress_callback):
@@ -149,6 +162,22 @@ class Ui_MainWindow(QtWidgets.QWidget):
     def finish_thread_msg(self):
         self.popup_notification = self.popup_notification + "\n" + "Process finished!"
         self.msg.setDetailedText(self.popup_notification)
+
+    # Warning for user to enter all necessary information...
+    def caution_msg(self):
+        self.msg = QtWidgets.QMessageBox()
+        self.msg.setWindowTitle("Caution")
+        self.msg.setText("Please input all information...")
+        self.msg.setIcon(QtWidgets.QMessageBox.Warning)
+        self.msg.setStandardButtons(QtWidgets.QMessageBox.Close)
+        self.msg.show()
+    def not_coded_msg(self):
+        self.msg = QtWidgets.QMessageBox()
+        self.msg.setWindowTitle("Sorry")
+        self.msg.setText("This feature is not implemented yet...")
+        self.msg.setIcon(QtWidgets.QMessageBox.Warning)
+        self.msg.setStandardButtons(QtWidgets.QMessageBox.Close)
+        self.msg.show()
 
     # Qt Designer Generated
     def setupUi(self, MainWindow):
@@ -391,17 +420,20 @@ class Ui_MainWindow(QtWidgets.QWidget):
 
     # Fill up Qt Designer Code to fit our requirement
     def refillUi(self, MainWindow):
-
-        ## Hardening
-        ipRange = "(?:[0-1]?[0-9]?[0-9]|2[0-4][0-9]|25[0-5])"  # Part of the regular expression
-        ipRegex = QRegExp("^" + ipRange + "\\." + ipRange + "\\." + ipRange + "\\." + ipRange + "$")
-        ipValidator = QtGui.QRegExpValidator(ipRegex)
-        self.threadpool = QtCore.QThreadPool()
+        ## Change Options (Device Model and Purpose)
+        self.model_ssh_combobox.clear()
+        self.model_ssh_combobox.addItems(self.models)
+        self.purpose_ssh_combobox.clear()
+        self.purpose_ssh_combobox.addItems(self.purpose)
+        self.model_console_combobox.clear()
+        self.model_console_combobox.addItems(self.models)
+        self.purpose_console_combobox.clear()
+        self.purpose_console_combobox.addItems(self.purpose)
 
         ## Embelishments
         # Single Device / via SSH
         self.device_ip_entry.setPlaceholderText("Enter IP...")
-        self.device_ip_entry.setValidator(ipValidator)
+        self.device_ip_entry.setValidator(self.ipValidator)
         self.username_ssh_entry.setPlaceholderText("Enter Username...")
         self.password_ssh_entry.setPlaceholderText("Enter Password...")
         self.password_ssh_entry.setEchoMode(self.password_ssh_entry.Password)
