@@ -19,6 +19,10 @@
   <property name="windowTitle">
    <string>DevMon</string>
   </property>
+  <property name="windowIcon">
+   <iconset>
+    <normaloff>logo.png</normaloff>logo.png</iconset>
+  </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QGridLayout" name="gridLayout">
     <item row="0" column="0">
@@ -499,8 +503,8 @@
           <rect>
            <x>0</x>
            <y>0</y>
-           <width>461</width>
-           <height>297</height>
+           <width>98</width>
+           <height>28</height>
           </rect>
          </property>
          <attribute name="label">

@@ -3,6 +3,14 @@ from PyQt5.QtCore import QRegExp
 import time
 import traceback
 from netmiko import ConnectHandler
+import logging
+import pandas as pd
+import re
+
+logging.basicConfig(level=logging.DEBUG,
+                    filename='app.log',
+                    filemode='w',
+                    format='%(asctime)s - %(message)s')
 
 class WorkerSignals(QtCore.QObject):
     finished = QtCore.pyqtSignal()
@@ -43,16 +51,56 @@ class Worker(QtCore.QRunnable):
         finally:
             self.signals.finished.emit()  # Done
 
+class Multiple_Device_WorkerSignals(QtCore.QObject):
+    finished = QtCore.pyqtSignal()
+    error = QtCore.pyqtSignal(tuple)
+    result = QtCore.pyqtSignal(object)
+    progress = QtCore.pyqtSignal(str)
+class Multiple_Device_Worker(QtCore.QRunnable):
+    def __init__(self, fn, *devices_list, **kwargs):
+        super(Multiple_Device_Worker, self).__init__()
+
+        # Store constructor arguments (re-used for processing)
+        self.fn = fn
+        self.devices_list = devices_list
+        self.kwargs = kwargs
+        self.signals = Multiple_Device_WorkerSignals()
+
+        # Add the callback to our kwargs
+        self.kwargs['progress_callback'] = self.signals.progress
+    @QtCore.pyqtSlot()
+    def run(self):
+        try:
+            result = self.fn(*self.devices_list,
+                             **self.kwargs)
+        except:
+            traceback.print_exc()
+            exctype, value = sys.exc_info()[:2]
+            self.signals.error.emit((exctype, value, traceback.format_exc()))
+        else:
+            self.signals.result.emit(result)  # Return the result of the processing
+        finally:
+            self.signals.finished.emit()  # Done
+
 class Ui_MainWindow(QtWidgets.QWidget):
     # Local Variables and Hardening Stuff...
     threadpool = QtCore.QThreadPool()
+    multiple_threadpool = QtCore.QThreadPool()
     ipRange = "(?:[0-1]?[0-9]?[0-9]|2[0-4][0-9]|25[0-5])"  # Part of the regular expression
     ipRegex = QRegExp("^" + ipRange + "\\." + ipRange + "\\." + ipRange + "\\." + ipRange + "$")
     ipValidator = QtGui.QRegExpValidator(ipRegex)
+    fullIPregex = "^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$"
     models = ['cisco_ios','cisco_asa','fortinet']
     purpose = ['Basic Troubleshooting','Performance Related']
     selected_file = ""
     popup_notification = "Process Started..."
+    options = {'Basic Troubleshooting':'BT', 'Performance Related':'PR'}
+    cisco_ios_BT = ["show run"]
+    cisco_ios_PR = ["show run"]
+    cisco_asa_BT = ["show run"]
+    cisco_asa_PR = ["show run"]
+    fortinet_BT = ["show"]
+    fortinet_PR = ["show"]
 
     # Button functions
     def go_ssh_button_clicked(self):
@@ -61,10 +109,12 @@ class Ui_MainWindow(QtWidgets.QWidget):
         ssh_password = self.password_ssh_entry.text()
         ssh_model = self.model_ssh_combobox.currentText()
         ssh_purpose = self.purpose_ssh_combobox.currentText()
+        commands_to_taken = eval('self.'+ssh_model+"_"+self.options[ssh_purpose])
         if (ssh_ip=="") or (ssh_username=="") or (ssh_password==""):
             self.caution_msg()
         else:
-            self.get_logs(ssh_ip, ssh_username, ssh_password, ssh_model, 'show run', 'show ip interface brief')
+            logging.info("Log collection for single device via SSH started.")
+            self.get_logs(ssh_ip, ssh_username, ssh_password, ssh_model, *commands_to_taken)
     def go_console_button_clicked(self):
         baud_rate = self.baud_rate_console_entry.text()
         com_port = self.com_port_console_entry.text()
@@ -77,13 +127,17 @@ class Ui_MainWindow(QtWidgets.QWidget):
     def add_row_button_clicked(self):
         rowPosition = self.manual_device_table.rowCount()
         self.manual_device_table.insertRow(rowPosition)
+        #cell_mask = QtWidgets.QLineEdit.setEchoMode()
+        #self.manual_device_table.setCellWidget(rowPosition, 2, cell_mask)
         model_combo = QtWidgets.QComboBox()
         for t in self.models:
             model_combo.addItem(t)
+        model_combo.setCurrentIndex(0)
         self.manual_device_table.setCellWidget(rowPosition, 3, model_combo)
         purpose_combo = QtWidgets.QComboBox()
         for t in self.purpose:
             purpose_combo.addItem(t)
+        purpose_combo.setCurrentIndex(0)
         self.manual_device_table.setCellWidget(rowPosition, 4, purpose_combo)
         self.manual_device_table.horizontalHeader().setSectionResizeMode(4, QtWidgets.QHeaderView.ResizeToContents)
     def delete_row_button_clicked(self):
@@ -91,16 +145,43 @@ class Ui_MainWindow(QtWidgets.QWidget):
         for index in sorted(indices):
             self.manual_device_table.removeRow(index.row())
     def go_manual_button_clicked(self):
+        manual_devices = []
         for entry in range(self.manual_device_table.rowCount()):
-            print(self.manual_device_table.item(entry,0).text())
-        self.not_coded_msg()
+            manual_ip = self.manual_device_table.item(entry,0).text()
+            manual_username = self.manual_device_table.item(entry,1).text()
+            manual_password = self.manual_device_table.item(entry, 2).text()
+            manual_model = self.manual_device_table.cellWidget(entry, 3).currentText()
+            manual_purpose = self.manual_device_table.cellWidget(entry, 4).currentText()
+            commands_to_taken = eval('self.'+manual_model+"_"+self.options[manual_purpose])
+            if (manual_ip == "") or (manual_username == "") or (manual_password == ""):
+                self.caution_msg()
+            else:
+                manual_devices.append((manual_ip,manual_username,manual_password,manual_model,manual_purpose))
+        self.get_multiple_device_logs(*manual_devices)
     def get_file_button_clicked(self):
         file_name = QtWidgets.QFileDialog.getOpenFileName(self, 'Open file',
                                                       "", "CSV files (*.csv)")
         self.selected_file = file_name[0]
         self.get_file_button.setText(self.selected_file)
     def go_file_button_clicked(self):
-        self.not_coded_msg()
+        self.devices_data = pd.read_csv(self.selected_file)
+        self.devices_list = []
+
+        for index, row in self.devices_data.iterrows():
+            self.devices_list.append((row['ip'], row['username'], row['password'], row['model'], row['purpose']))
+
+        devices = []
+        for entry in self.devices_list:
+            ip = entry[0]
+            username = entry[1]
+            password = entry[2]
+            model = entry[3]
+            purpose = entry[4]
+            if (ip == "") or (username == "") or (password == ""):
+                self.caution_msg()
+            else:
+                devices.append((ip,username,password,model,purpose))
+        self.get_multiple_device_logs(*devices)
 
     # Connect to device...
     def connect_device(self, ip, username, password, model, *commands, progress_callback):
@@ -109,20 +190,55 @@ class Ui_MainWindow(QtWidgets.QWidget):
                                 username=username,
                                 password=password)
         progress_callback.emit("Connected to "+ip)
-        f = open("tshoot.log", "a")
-        for command in commands:
+        f = open("tshoot.log", "w")
+        for command in commands[0]:
+            print(commands)
             progress_callback.emit("Getting output of \""+command+"\"")
             output = device.send_command(command)
-            header_text = '----- Command: ' + command + ' -----'
-            f.write('-' * len(header_text) + '\n')
+            header_text = 'command: ' + command
             f.write(header_text + '\n')
-            f.write('-' * len(header_text) + '\n')
-            f.write('\n')
+            f.write('output: '+'\n')
             f.write(output)
-            f.write('\n')
         f.close()
         device.disconnect()
         return("Log Collection for "+ip+" done.")
+    def multiple_connect_device(self, *devices_list, progress_callback):
+        for entry in devices_list[0]:
+            if re.match(self.fullIPregex,entry[0]):
+                device = ConnectHandler(device_type=entry[3],
+                                        ip=entry[0],
+                                        username=entry[1],
+                                        password=entry[2])
+                progress_callback.emit("Connected to "+entry[0])
+                f = open(entry[0]+"_"+entry[3]+"_"+self.options[entry[4]]+"("+str(time.localtime().tm_year)+"-"+str(time.localtime().tm_mon)+"-"+str(time.localtime().tm_mday)+"-"+str(time.localtime().tm_hour)+"-"+str(time.localtime().tm_min)+"-"+str(time.localtime().tm_sec)+").log","w")
+                for command in eval('self.'+entry[3]+"_"+self.options[entry[4]]):
+                    progress_callback.emit("Getting output of \""+command+"\"")
+                    output = device.send_command(command)
+                    header_text = 'command: ' + command
+                    f.write(header_text + '\n')
+                    f.write('output: '+'\n')
+                    f.write(output)
+                f.close()
+                device.disconnect()
+                progress_callback.emit("Log Collection for "+entry[0]+" done.")
+            else:
+                progress_callback.emit("Please enter valid IP.")
+                pass
+        return("Log Collection done.")
+    def tmp_connect_device(self, ip, username, password, model, *commands, progress_callback):
+        # After GUI testing is done. Replace this by connect_device...
+        progress_callback.emit("Connected to "+ip)
+        for command in commands[0]:
+            progress_callback.emit("Getting output of \""+command+"\"")
+            time.sleep(5)
+        return("Log Collection for "+ip+" done.")
+    def tmp_multiple_connect_device(self, *devices_list, progress_callback):
+        # After GUI testing is done. Replace this by connect_device...
+        for device in devices_list[0]:
+            progress_callback.emit("Connected to " + str(device[0]))
+            progress_callback.emit("Getting output for \""+str(device[0])+"\"")
+            time.sleep(5)
+        return("Log Collection for all devices done.")
 
     # Multitasking log collection...
     def get_logs(self, ip, username, password, model, *commands):
@@ -145,14 +261,21 @@ class Ui_MainWindow(QtWidgets.QWidget):
         self.msg.setStandardButtons(QtWidgets.QMessageBox.Close)
         self.msg.setDetailedText(self.popup_notification)
         self.msg.show()
-        sys.exit(self.msg.exec_())
-    def tmp_connect_device(self, ip, username, password, model, commands, progress_callback):
-        # After GUI testing is done. Replace this by connect_device...
-        progress_callback.emit("Connected to "+ip)
-        for command in commands:
-            time.sleep(5)
-            progress_callback.emit("Getting output of \""+command+"\"")
-        return("Log Collection for "+ip+" done.")
+    def get_multiple_device_logs(self, *devices_list):
+        # Create a new thread and pass the process to it
+        worker = Multiple_Device_Worker(self.multiple_connect_device, devices_list)
+        worker.signals.result.connect(self.finish_popup_msg)
+        worker.signals.finished.connect(self.finish_thread_msg)
+        worker.signals.progress.connect(self.change_popup_msg)
+        # Execute
+        self.multiple_threadpool.start(worker)
+        self.msg = QtWidgets.QMessageBox()
+        self.msg.setWindowTitle("Status")
+        self.msg.setText("Information Gathering in progress...")
+        self.msg.setIcon(QtWidgets.QMessageBox.Question)
+        self.msg.setStandardButtons(QtWidgets.QMessageBox.Close)
+        self.msg.setDetailedText(self.popup_notification)
+        self.msg.show()
     def change_popup_msg(self, n):
         self.popup_notification = self.popup_notification + "\n" + n
         self.msg.setDetailedText(self.popup_notification)
@@ -184,6 +307,9 @@ class Ui_MainWindow(QtWidgets.QWidget):
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(500, 400)
         MainWindow.setMaximumSize(QtCore.QSize(500, 400))
+        icon = QtGui.QIcon()
+        icon.addPixmap(QtGui.QPixmap("logo.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        MainWindow.setWindowIcon(icon)
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
         self.gridLayout = QtWidgets.QGridLayout(self.centralwidget)
@@ -369,7 +495,7 @@ class Ui_MainWindow(QtWidgets.QWidget):
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
-        MainWindow.setWindowTitle(_translate("MainWindow", "DevMon"))
+        MainWindow.setWindowTitle(_translate("MainWindow", "Network-Supporter"))
         self.device_ip.setText(_translate("MainWindow", "<html><head/><body><p align=\"right\"><span style=\" font-weight:600;\">Device IP: </span></p></body></html>"))
         self.model_ssh_combobox.setItemText(0, _translate("MainWindow", "cisco_ios"))
         self.model_ssh_combobox.setItemText(1, _translate("MainWindow", "cisco_asa"))
@@ -452,13 +578,17 @@ class Ui_MainWindow(QtWidgets.QWidget):
         # Multiple Devices / Add Devices Manually
         manual_device_current = self.manual_device_table.rowCount()
         for index in range(manual_device_current):
+            #cell_mask = QtWidgets.QLineEdit.setEchoMode(Password)
+            #self.manual_device_table.setCellWidget(index, 2, cell_mask)
             model_combo = QtWidgets.QComboBox()
             for t in self.models:
                 model_combo.addItem(t)
+            model_combo.setCurrentIndex(0)
             self.manual_device_table.setCellWidget(index, 3, model_combo)
             purpose_combo = QtWidgets.QComboBox()
             for t in self.purpose:
                 purpose_combo.addItem(t)
+            purpose_combo.setCurrentIndex(0)
             self.manual_device_table.setCellWidget(index, 4, purpose_combo)
             self.manual_device_table.horizontalHeader().setSectionResizeMode(4, QtWidgets.QHeaderView.ResizeToContents)
         self.add_row_button.clicked.connect(self.add_row_button_clicked)
@@ -471,6 +601,7 @@ class Ui_MainWindow(QtWidgets.QWidget):
 
 if __name__ == "__main__":
     import sys
+    logging.info('App Started.')
     app = QtWidgets.QApplication(sys.argv)
     MainWindow = QtWidgets.QMainWindow()
     ui = Ui_MainWindow()

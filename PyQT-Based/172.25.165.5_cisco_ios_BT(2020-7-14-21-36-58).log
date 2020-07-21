@@ -1,0 +1,452 @@
+command: show run
+output: 
+Building configuration...
+
+Current configuration : 11254 bytes
+!
+! Last configuration change at 21:23:21 GMT Sat Jun 6 2020 by priyankar
+! NVRAM config last updated at 21:23:23 GMT Sat Jun 6 2020 by priyankar
+!
+version 12.2
+no service pad
+service timestamps debug datetime msec
+service timestamps log datetime msec
+service password-encryption
+!
+hostname MITESP-GH-PDC-RK03-2960S-05
+!
+boot-start-marker
+boot-end-marker
+!
+enable secret 5 $1$jC4/$uXqvwqFlNbZ3943F5jh3V1
+enable password 7 15115A1F077A
+!
+username sanjeevac privilege 15 password 7 104D000A061843595F47
+username hasunm privilege 15 password 7 15314A1F077A0B757A6076
+username mitadmin privilege 15 password 7 123A4404115B2C55787867
+username prabuddhah privilege 15 password 7 082C455A36495C4F45
+username maduranga privilege 15 password 7 141453180F547B79776B
+username asankadev privilege 15 password 7 04780A5158751B1E51
+username priyankar privilege 15 secret 5 $1$64.u$FqIOs0Ct4BNjY5CIqhocY/
+!
+!
+aaa new-model
+!
+!
+!
+!
+!
+aaa session-id common
+clock timezone GMT 5 30
+switch 1 provision ws-c2960s-48ts-l
+!
+!
+ip domain-name millenniumit.com
+vtp domain ESP_CMB
+vtp mode transparent
+!
+!
+crypto pki trustpoint TP-self-signed-624633600
+ enrollment selfsigned
+ subject-name cn=IOS-Self-Signed-Certificate-624633600
+ revocation-check none
+ rsakeypair TP-self-signed-624633600
+!
+!
+crypto pki certificate chain TP-self-signed-624633600
+ certificate self-signed 01
+  3082025A 308201C3 A0030201 02020101 300D0609 2A864886 F70D0101 04050030 
+  30312E30 2C060355 04031325 494F532D 53656C66 2D536967 6E65642D 43657274 
+  69666963 6174652D 36323436 33333630 30301E17 0D393330 33303130 30303330 
+  325A170D 32303031 30313030 30303030 5A303031 2E302C06 03550403 1325494F 
+  532D5365 6C662D53 69676E65 642D4365 72746966 69636174 652D3632 34363333 
+  36303030 819F300D 06092A86 4886F70D 01010105 0003818D 00308189 02818100 
+  B190190D ACF8C550 8F95E338 36E6B2FC 704F0F7C B9C4E328 6973EBB3 D63F6703 
+  EF36670B 96E95664 A233DD50 7548F096 CBEC40E7 B0C80840 444AB0D9 2C543179 
+  66B7123D FA6DD335 630A8DD0 D13CDF14 09E16E64 110412DC 121373FE B9C50192 
+  0D43775B 66767E64 DF08D6F7 1142B1AA 9AD741CF A25DF1B9 1BD2F70E 7257FB8F 
+  02030100 01A38183 30818030 0F060355 1D130101 FF040530 030101FF 302D0603 
+  551D1104 26302482 22457370 2D496E66 72612D31 31322D32 35302E6D 696C6C65 
+  6E6E6975 6D69742E 636F6D30 1F060355 1D230418 30168014 58BE092C 54C1D58B 
+  A926C545 B2C5AF74 DC2E0046 301D0603 551D0E04 16041458 BE092C54 C1D58BA9 
+  26C545B2 C5AF74DC 2E004630 0D06092A 864886F7 0D010104 05000381 8100973D 
+  46E6EE4A 20E7A78C 2186D431 5F7C6F57 F3262DDD 70FFDE80 0297EFBC 12279607 
+  28D9E5D7 C4CA212F 1B1C3984 A92C4AA0 8B735172 FC9F421E B3D21E0A 8C114F8F 
+  3771AAE6 7E622353 AD1803D6 DB05529D 344D8169 7FBB26A7 3DE5D8C2 E8EDD308 
+  BA0A4484 6BC42E4F 5C4E0BD6 2171841D 2A260DB5 DE0C102E BC92965F 7675
+  quit
+archive
+ path tftp://172.25.160.55/MITESP-GH-PDC-RK03-2960S-05.txt
+ write-memory
+ time-period 10080
+spanning-tree mode pvst
+spanning-tree extend system-id
+!
+!
+!
+!
+vlan internal allocation policy ascending
+!
+vlan 90
+ name Data90
+!
+vlan 108,112-114,119,155 
+!
+vlan 160
+ name Data160
+!
+vlan 161
+ name Data161
+!
+vlan 162
+ name voice_management
+!
+vlan 164
+ name Exam_Engine_VM
+!
+vlan 165
+ name Network_MGMT
+!
+vlan 167 
+!
+vlan 170
+ name Test_VLAN_SAJIT_R
+!
+vlan 171
+ name SEC_Monitoring
+!
+vlan 172
+ name remote-span
+ remote-span
+!
+vlan 188
+ name DCLAB-INFRA
+!
+vlan 192
+ name Data192
+!
+vlan 251
+ name Guest-WiFi-Test
+!
+vlan 700
+ name WiFi_Guest
+!
+vlan 1017
+ name CISCO_LAB
+!
+vlan 2016 
+!
+ip ssh version 2
+!
+!
+interface Port-channel1
+ switchport mode trunk
+!
+interface FastEthernet0
+ no ip address
+ shutdown
+!
+interface GigabitEthernet1/0/1
+ description #172.25.107.200#
+ switchport trunk allowed vlan 1017
+ switchport mode trunk
+!
+interface GigabitEthernet1/0/2
+ switchport access vlan 1017
+ switchport mode access
+ ip access-group DENY-DHCP in
+!
+interface GigabitEthernet1/0/3
+ description #172.25.107.20#
+ switchport access vlan 1017
+ switchport mode access
+!
+interface GigabitEthernet1/0/4
+ switchport access vlan 161
+ switchport mode access
+!
+interface GigabitEthernet1/0/5
+ switchport access vlan 161
+ switchport mode access
+!
+interface GigabitEthernet1/0/6
+ switchport access vlan 161
+ switchport mode access
+!
+interface GigabitEthernet1/0/7
+ description ###ESXI-SERVER-IDRAC###
+ switchport access vlan 161
+ switchport mode access
+!
+interface GigabitEthernet1/0/8
+ switchport access vlan 112
+ switchport mode access
+!
+interface GigabitEthernet1/0/9
+ switchport access vlan 112
+ switchport mode access
+!
+interface GigabitEthernet1/0/10
+ switchport access vlan 112
+ switchport mode access
+!
+interface GigabitEthernet1/0/11
+ description ### SD WAN CIMC - Pamoda ###
+ switchport access vlan 1017
+ switchport mode access
+!
+interface GigabitEthernet1/0/12
+ description ### SD WAN ESXI - Pamoda ###
+ switchport mode trunk
+!
+interface GigabitEthernet1/0/13
+ switchport access vlan 112
+ switchport mode access
+ spanning-tree portfast
+!
+interface GigabitEthernet1/0/14
+ switchport access vlan 112
+ switchport mode access
+!
+interface GigabitEthernet1/0/15
+ switchport access vlan 112
+ switchport mode access
+!
+interface GigabitEthernet1/0/16
+ switchport access vlan 112
+ switchport mode access
+!
+interface GigabitEthernet1/0/17
+ switchport access vlan 112
+ switchport mode access
+!
+interface GigabitEthernet1/0/18
+ switchport mode trunk
+!
+interface GigabitEthernet1/0/19
+ switchport mode trunk
+!
+interface GigabitEthernet1/0/20
+ switchport mode trunk
+!
+interface GigabitEthernet1/0/21
+ switchport mode trunk
+!
+interface GigabitEthernet1/0/22
+ switchport mode trunk
+!
+interface GigabitEthernet1/0/23
+ switchport access vlan 1017
+ switchport mode access
+!
+interface GigabitEthernet1/0/24
+ switchport access vlan 112
+ switchport mode access
+!
+interface GigabitEthernet1/0/25
+ switchport access vlan 108
+ switchport mode access
+!
+interface GigabitEthernet1/0/26
+ switchport access vlan 108
+ switchport mode access
+!
+interface GigabitEthernet1/0/27
+ switchport access vlan 112
+ switchport mode access
+!
+interface GigabitEthernet1/0/28
+ switchport access vlan 112
+ switchport mode access
+!
+interface GigabitEthernet1/0/29
+ switchport access vlan 112
+ switchport mode access
+!
+interface GigabitEthernet1/0/30
+ switchport access vlan 112
+ switchport mode access
+!
+interface GigabitEthernet1/0/31
+ switchport access vlan 112
+ switchport mode access
+!
+interface GigabitEthernet1/0/32
+ switchport access vlan 112
+ switchport mode access
+!
+interface GigabitEthernet1/0/33
+ switchport access vlan 112
+ switchport mode access
+!
+interface GigabitEthernet1/0/34
+ switchport access vlan 112
+ switchport mode access
+!
+interface GigabitEthernet1/0/35
+ switchport access vlan 113
+ switchport mode access
+!
+interface GigabitEthernet1/0/36
+ switchport access vlan 113
+ switchport mode access
+!
+interface GigabitEthernet1/0/37
+ switchport access vlan 155
+ switchport mode access
+!
+interface GigabitEthernet1/0/38
+ switchport access vlan 155
+ switchport mode access
+!
+interface GigabitEthernet1/0/39
+ switchport access vlan 155
+ switchport mode access
+!
+interface GigabitEthernet1/0/40
+ switchport access vlan 112
+ switchport mode access
+!
+interface GigabitEthernet1/0/41
+ switchport access vlan 112
+ switchport mode access
+!
+interface GigabitEthernet1/0/42
+ switchport access vlan 112
+ switchport mode access
+!
+interface GigabitEthernet1/0/43
+ switchport access vlan 112
+ switchport mode access
+!
+interface GigabitEthernet1/0/44
+ switchport access vlan 112
+ switchport mode access
+!
+interface GigabitEthernet1/0/45
+ description ### Uplink-To-ESP-RACK-C-NEXUS-01-1/47 ###
+ switchport mode trunk
+ channel-protocol lacp
+ channel-group 1 mode active
+!
+interface GigabitEthernet1/0/46
+ description ### Uplink-To-ESP-RACK-C-NEXUS-01-Eth 1/48 ###
+ switchport mode trunk
+ channel-protocol lacp
+ channel-group 1 mode active
+!
+interface GigabitEthernet1/0/47
+ switchport mode trunk
+!
+interface GigabitEthernet1/0/48
+ description ### Uplink-To-ESP_CORE_SW-Gig 1/0/47 ###
+ switchport trunk allowed vlan 90,100,108,112,119,155,160-162,164,165,170-172
+ switchport trunk allowed vlan add 188,192,199,200,251,700,1017
+ switchport mode trunk
+!
+interface GigabitEthernet1/0/49
+!
+interface GigabitEthernet1/0/50
+!
+interface GigabitEthernet1/0/51
+!
+interface GigabitEthernet1/0/52
+!
+interface Vlan1
+ no ip address
+ shutdown
+!
+interface Vlan100
+ no ip address
+!
+interface Vlan108
+ ip address 172.25.108.251 255.255.255.0
+!
+interface Vlan112
+ ip address 172.25.112.251 255.255.255.0
+!
+interface Vlan165
+ description ###Network_Mgmt
+ ip address 172.25.165.5 255.255.255.0
+!
+ip default-gateway 172.25.112.1
+ip http server
+ip http secure-server
+!
+ip access-list extended DENY-DHCP
+ deny   ip 192.168.150.0 0.0.0.255 any
+ deny   ip 192.168.250.0 0.0.0.255 any
+ permit ip any any
+ip access-list extended LIMIT-INT
+ permit ip any 192.168.150.0 0.0.0.255
+ permit ip any 172.25.0.0 0.0.255.255
+ip sla enable reaction-alerts
+logging facility syslog
+logging source-interface Vlan165
+logging 172.25.50.65
+logging 175.25.123.143
+logging 172.25.123.143
+logging 172.25.160.58
+logging 172.25.160.150
+logging 172.25.160.151
+arp 172.25.112.200 0000.8753.1ca9 ARPA GigabitEthernet1/0/26
+snmp-server community ESP@m5T RW
+snmp-server trap-source Vlan165
+snmp-server chassis-id cha-ds-1a-pcomm
+snmp-server enable traps snmp authentication linkdown linkup coldstart warmstart
+snmp-server enable traps transceiver all
+snmp-server enable traps tty
+snmp-server enable traps license
+snmp-server enable traps auth-framework sec-violation
+snmp-server enable traps cluster
+snmp-server enable traps config-copy
+snmp-server enable traps config
+snmp-server enable traps config-ctid
+snmp-server enable traps dot1x auth-fail-vlan guest-vlan no-auth-fail-vlan no-guest-vlan
+snmp-server enable traps energywise
+snmp-server enable traps fru-ctrl
+snmp-server enable traps entity
+snmp-server enable traps power-ethernet group 1-4
+snmp-server enable traps power-ethernet police
+snmp-server enable traps cpu threshold
+snmp-server enable traps rep
+snmp-server enable traps rtr
+snmp-server enable traps vstack
+snmp-server enable traps bridge newroot topologychange
+snmp-server enable traps stpx inconsistency root-inconsistency loop-inconsistency
+snmp-server enable traps syslog
+snmp-server enable traps vtp
+snmp-server enable traps vlancreate
+snmp-server enable traps vlandelete
+snmp-server enable traps flash insertion removal
+snmp-server enable traps port-security
+snmp-server enable traps envmon fan shutdown supply temperature status
+snmp-server enable traps stackwise
+snmp-server enable traps errdisable
+snmp-server enable traps mac-notification change move threshold
+snmp-server enable traps vlan-membership
+snmp-server host 172.25.160.150 version 2c ESP@m5T 
+snmp-server host 172.25.160.55 version 2c ESP@m5T 
+snmp ifmib ifindex persist
+tacacs-server host 172.25.50.121 key 7 06231C31737D0C1A171206
+tacacs-server directed-request
+!
+line con 0
+ password 7 1159170B37115A1F077A
+ logging synchronous
+line vty 0 4
+ privilege level 15
+ password 7 12490B1932085D17297B
+ logging synchronous
+ transport input ssh
+line vty 5 15
+ privilege level 15
+ password 7 055B0801014F1F1A1A55
+ transport input ssh
+!
+!
+monitor session 1 source interface Gi1/0/25 - 26
+monitor session 1 destination interface Gi1/0/41
+ntp clock-period 22519122
+ntp server 172.25.160.10 version 2 prefer
+end
